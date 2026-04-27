@@ -38,13 +38,38 @@ BLUE, CYAN, GREEN, YELLOW, RED = (
 
 # --- Tool implementations ---
 
+MAX_LINES = 2000
+MAX_LINE_LEN = 2000
+
 
 def read(args):
-    lines = open(args["path"]).readlines()
-    offset = args.get("offset", 0)
-    limit = args.get("limit", len(lines))
-    selected = lines[offset : offset + limit]
-    return "".join(f"{offset + idx + 1:4}| {line}" for idx, line in enumerate(selected))
+    path = args["path"]
+    offset = max(1, args.get("offset", 1))  # 1-indexed
+    limit = args.get("limit", MAX_LINES)
+
+    with open(path, "rb") as f:
+        if b"\x00" in f.read(4096):
+            return f"error: {path} looks binary"
+
+    with open(path, errors="replace") as f:
+        all_lines = f.read().splitlines()
+    total = len(all_lines)
+    if total and offset > total:
+        return f"error: offset {offset} exceeds file length ({total} lines)"
+
+    selected = all_lines[offset - 1 : offset - 1 + limit]
+    out = []
+    for idx, line in enumerate(selected):
+        if len(line) > MAX_LINE_LEN:
+            line = line[:MAX_LINE_LEN] + "... (line truncated)"
+        out.append(f"{offset + idx:4}| {line}")
+
+    end = offset + len(selected) - 1
+    if end >= total:
+        out.append(f"\n(end of file - {total} lines total)")
+    else:
+        out.append(f"\n(showing {offset}-{end} of {total}, use offset={end + 1} to continue)")
+    return "\n".join(out)
 
 
 def write(args):
@@ -53,18 +78,59 @@ def write(args):
     return "ok"
 
 
+def _find_match(text, old):
+    """Locate `old` in `text`. Returns (candidate_substring, occurrence_count).
+
+    Tries: (1) exact match, (2) line-trimmed match (tolerates per-line
+    leading/trailing whitespace differences). Returns (None, 0) on miss.
+    """
+    if old in text:
+        return old, text.count(old)
+
+    file_lines = text.split("\n")
+    old_lines = old.split("\n")
+    if not old_lines or len(old_lines) > len(file_lines):
+        return None, 0
+
+    target = [l.strip() for l in old_lines]
+    matches = []
+    for i in range(len(file_lines) - len(old_lines) + 1):
+        window = file_lines[i : i + len(old_lines)]
+        if [l.strip() for l in window] == target:
+            candidate = "\n".join(window)
+            if candidate in text:
+                matches.append(candidate)
+
+    if not matches:
+        return None, 0
+    unique = [c for c in matches if text.count(c) == 1]
+    chosen = unique[0] if unique else matches[0]
+    return chosen, text.count(chosen)
+
+
 def edit(args):
-    text = open(args["path"]).read()
-    old, new = args["old"], args["new"]
-    if old not in text:
-        return "error: old_string not found"
-    count = text.count(old)
-    if not args.get("all") and count > 1:
-        return f"error: old_string appears {count} times, must be unique (use all=true)"
+    path, old, new = args["path"], args["old"], args["new"]
+    if old == new:
+        return "error: old and new are identical"
+
+    if old == "":
+        with open(path, "w") as f:
+            f.write(new)
+        return "ok (created)"
+
+    text = open(path).read()
+    candidate, count = _find_match(text, old)
+    if candidate is None:
+        return "error: old not found in file"
+    if count > 1 and not args.get("all"):
+        return f"error: old matches {count} places, add more context or pass all=true"
+
     replacement = (
-        text.replace(old, new) if args.get("all") else text.replace(old, new, 1)
+        text.replace(candidate, new)
+        if args.get("all")
+        else text.replace(candidate, new, 1)
     )
-    with open(args["path"], "w") as f:
+    with open(path, "w") as f:
         f.write(replacement)
     return "ok"
 
@@ -119,7 +185,8 @@ def bash(args):
 
 TOOLS = {
     "read": (
-        "Read file with line numbers (file path, not directory)",
+        "Read file with line numbers. offset is 1-indexed; default limit 2000 lines. "
+        "Output format is 'N| <content>' - the 'N| ' prefix is NOT part of the file.",
         {"path": "string", "offset": "number?", "limit": "number?"},
         read,
     ),
@@ -129,7 +196,10 @@ TOOLS = {
         write,
     ),
     "edit": (
-        "Replace old with new in file (old must be unique unless all=true)",
+        "Replace old with new in file. old must match uniquely unless all=true. "
+        "Per-line leading/trailing whitespace is tolerated. If old is empty, the "
+        "file is created/overwritten with new. Never include the 'N| ' line-number "
+        "prefix from read output in old/new.",
         {"path": "string", "old": "string", "new": "string", "all": "boolean?"},
         edit,
     ),
@@ -252,7 +322,15 @@ def main():
                 if content:
                     print(f"\n{CYAN}⏺{RESET} {render_markdown(content)}")
 
+                # Preserve reasoning across tool calls. Providers use different
+                # field names for interleaved thinking; pass through whichever
+                # the server returned, verbatim. (DeepSeek/Qwen/older vLLM:
+                # 'reasoning_content'; newer vLLM/OpenRouter: 'reasoning';
+                # MiniMax M2 with reasoning_split=true: 'reasoning_details'.)
                 assistant_msg = {"role": "assistant", "content": content}
+                for key in ("reasoning_content", "reasoning", "reasoning_details"):
+                    if message.get(key) is not None:
+                        assistant_msg[key] = message[key]
                 if tool_calls:
                     assistant_msg["tool_calls"] = tool_calls
                 messages.append(assistant_msg)
