@@ -21,6 +21,12 @@ export MODEL_NAME="gpt-4o-mini"
 python nanocode.py
 ```
 
+### Optional Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `NANOCODE_YOLO` | Set to `1`, `true`, or `yes` to skip confirmation prompts for dangerous bash commands (e.g., `rm`, `sudo`, git force-push) |
+
 ### Examples
 
 **OpenAI**
