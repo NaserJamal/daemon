@@ -11,10 +11,11 @@ from daemon.cli import commands
 from daemon.cli.configure import handle_subcommand, run_configure
 from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
 from daemon.cli.prompt import read_input
-from daemon.core import usage
+from daemon.core import sessions, usage
 from daemon.core.api import call_api
 from daemon.core.config import get_settings
 from daemon.core.prompt import get_default_system_prompt
+from daemon.core.sessions import Session, SessionMeta
 from daemon.tools import get_schema, run_tool
 
 PREVIEW_LEN = 60
@@ -93,9 +94,69 @@ def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> N
             )
 
 
+def _pick_session() -> SessionMeta | None:
+    """Show the resume picker for the current cwd. Returns the chosen session or None."""
+    metas = sessions.list_sessions()
+    if not metas:
+        print(f"{DIM}No previous sessions found for {os.getcwd()}.{RESET}")
+        return None
+    print(f"{BOLD}Resume a previous session:{RESET}\n")
+    width = len(str(len(metas)))
+    for i, meta in enumerate(metas, start=1):
+        age = sessions.format_age(meta.updated_at)
+        print(
+            f"  {DIM}{i:>{width}}.{RESET} "
+            f"{CYAN}{age:>4}{RESET} ago  "
+            f"{DIM}{meta.message_count:>3} msgs{RESET}  "
+            f"{meta.summary}"
+        )
+    print()
+    try:
+        raw = input(f"{BOLD}Choose [1-{len(metas)}, Enter to start fresh]:{RESET} ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None
+    if not raw:
+        return None
+    try:
+        idx = int(raw)
+    except ValueError:
+        print(f"{RED}Not a number.{RESET}")
+        return None
+    if not 1 <= idx <= len(metas):
+        print(f"{RED}Out of range.{RESET}")
+        return None
+    return metas[idx - 1]
+
+
+def _start_session(argv: list[str]) -> tuple[Session, list[dict[str, Any]]]:
+    """Decide whether to resume or start a new session and return (session, messages)."""
+    if "--resume" in argv or "-r" in argv:
+        chosen = _pick_session()
+        if chosen is not None:
+            session, messages = Session.open(chosen.path)
+            print(f"{GREEN}⏺ Resumed {chosen.session_id} ({len(messages)} messages){RESET}\n")
+            return session, messages
+    if "--continue" in argv or "-c" in argv:
+        latest = sessions.latest_session()
+        if latest is not None:
+            session, messages = Session.open(latest.path)
+            print(f"{GREEN}⏺ Continuing {session.session_id} ({len(messages)} messages){RESET}\n")
+            return session, messages
+        print(f"{DIM}No previous session to continue; starting fresh.{RESET}\n")
+    session = Session.new()
+    messages = [{"role": "system", "content": get_default_system_prompt()}]
+    session.sync(messages)
+    return session, messages
+
+
 def main() -> None:
     """Run the REPL or dispatch a subcommand."""
-    exit_code = handle_subcommand(sys.argv[1:])
+    argv = sys.argv[1:]
+    # The session flags are REPL-level, not subcommands; strip them before
+    # `handle_subcommand` so they don't trigger an "unknown subcommand" error.
+    repl_argv = [a for a in argv if a not in ("--resume", "-r", "--continue", "-c")]
+    exit_code = handle_subcommand(repl_argv)
     if exit_code is not None:
         raise SystemExit(exit_code)
 
@@ -107,7 +168,8 @@ def main() -> None:
 
     _print_banner()
     schema = get_schema()
-    messages: list[dict[str, Any]] = [{"role": "system", "content": get_default_system_prompt()}]
+    session, messages = _start_session(argv)
+    commands.set_session(session)
 
     while True:
         try:
@@ -121,10 +183,17 @@ def main() -> None:
             if handled is False:
                 break
             if handled is True:
+                # Slash commands may have swapped the active session (e.g.
+                # /clear creates a new one). Re-fetch and persist.
+                active = commands.get_session()
+                if active is not None:
+                    session = active
+                    session.sync(messages)
                 continue
 
             messages.append({"role": "user", "content": user_input})
             _run_turn(messages, schema)
+            session.sync(messages)
             if usage.show_per_turn():
                 print(f"\n{DIM}⏺ usage: {usage.format_summary()}{RESET}")
             print()
