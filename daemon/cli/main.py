@@ -11,6 +11,7 @@ from daemon.cli import commands
 from daemon.cli.configure import handle_subcommand, run_configure
 from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
 from daemon.cli.prompt import read_input
+from daemon.core import usage
 from daemon.core.api import call_api
 from daemon.core.config import get_settings
 from daemon.core.prompt import get_default_system_prompt
@@ -56,7 +57,9 @@ def _result_preview(result: str) -> str:
 def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> None:
     """Drive the model until it produces a turn with no tool calls."""
     while True:
-        message = call_api(messages, tools=schema)["choices"][0]["message"]
+        response = call_api(messages, tools=schema)
+        usage.add_response(response)
+        message = response["choices"][0]["message"]
         content = message.get("content") or ""
         tool_calls = message.get("tool_calls") or []
 
@@ -122,6 +125,8 @@ def main() -> None:
 
             messages.append({"role": "user", "content": user_input})
             _run_turn(messages, schema)
+            if usage.show_per_turn():
+                print(f"\n{DIM}⏺ usage: {usage.format_summary()}{RESET}")
             print()
 
         except (KeyboardInterrupt, EOFError):

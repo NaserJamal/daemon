@@ -23,11 +23,6 @@ for tests.
   message is complete (tool calls can't be partially applied).
 - Preserve existing reasoning-field passthrough.
 
-### P4 — Cost & token tracking
-Show running input/output token counts and (when available) cost after each
-turn. Pull `usage` from the API response. Display in the banner footer or
-after each assistant turn. Make it toggleable via a `/usage` command.
-
 ### P5 — Conversation persistence
 `/save <name>` writes the current `messages` list to
 `<config_dir>/sessions/<name>.json`; `/load <name>` restores it.
@@ -70,3 +65,4 @@ them. Format: `- P1 — Lint & type cleanup — sessions/2026-04-29-1400-lint.md
 - P0 — Agent-handoff scaffolding — sessions/2026-04-28-1518-genesis.md
 - P1 — Lint & type cleanup — sessions/2026-04-28-1531-lint-and-types.md
 - P3 — `/help` and slash-command discoverability — sessions/2026-04-28-1547-slash-command-registry.md
+- P4 — Cost & token tracking — sessions/2026-04-28-1605-usage-tracking.md
