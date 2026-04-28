@@ -29,12 +29,9 @@ def _build_keybindings() -> KeyBindings:
             return
         buf.validate_and_handle()
 
-    # Shift+Enter — supported by iTerm2 (with mapping), kitty, WezTerm, Ghostty, VS Code.
-    @kb.add("s-enter")
-    def _newline_shift(event) -> None:
-        event.current_buffer.insert_text("\n")
-
-    # Alt/Opt+Enter — universal fallback when the terminal sends Meta.
+    # Alt/Opt+Enter (terminal sends ESC + CR). Most terminals can be configured
+    # to send this same sequence when Shift+Enter is pressed, giving the user
+    # a "Shift+Enter for newline" experience identical to Claude Code.
     @kb.add("escape", "enter")
     def _newline_alt(event) -> None:
         event.current_buffer.insert_text("\n")

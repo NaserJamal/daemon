@@ -42,9 +42,21 @@ daemon = "daemon.cli.main:main"
 Homepage = "https://github.com/naserjamal/daemon"
 Repository = "https://github.com/naserjamal/daemon"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["daemon*"]
+[tool.setuptools]
+packages = [
+    "daemon",
+    "daemon.cli",
+    "daemon.core",
+    "daemon.safety",
+    "daemon.tools",
+]
+
+[tool.setuptools.package-dir]
+"daemon" = "."
+"daemon.cli" = "cli"
+"daemon.core" = "core"
+"daemon.safety" = "safety"
+"daemon.tools" = "tools"
 
 [tool.setuptools.package-data]
 daemon = ["pyproject.toml"]

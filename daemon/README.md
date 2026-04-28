@@ -20,7 +20,10 @@ daemon is a lightweight, modular CLI tool that brings AI assistance to your term
 git clone https://github.com/naserjamal/daemon.git
 cd daemon
 
-# Install in development mode
+# Recommended: uv (creates .venv and resolves uv.lock automatically)
+uv sync
+
+# Or with pip
 pip install -e .
 
 # Or install with dev dependencies
@@ -50,6 +53,9 @@ export MODEL_NAME=gpt-4o-mini
 ### Running
 
 ```bash
+# With uv (recommended)
+uv run daemon
+
 # Using the module
 python -m daemon
 
@@ -74,8 +80,8 @@ The prompt is a multi-line editor backed by `prompt_toolkit`.
 | Key | Action |
 |-----|--------|
 | `Enter` | Submit |
-| `Shift+Enter` | Insert newline (iTerm2, kitty, WezTerm, Ghostty, VS Code terminal) |
-| `Alt/Opt+Enter` | Insert newline (universal fallback when Meta is enabled) |
+| `Alt/Opt+Enter` | Insert newline |
+| `Shift+Enter` | Insert newline (requires terminal-level mapping — see note) |
 | `\` then `Enter` | Insert newline (works in any terminal) |
 | `↑` / `↓` | Move between lines; at top/bottom edge, walk through history |
 | `Ctrl+R` | Reverse history search |
@@ -86,7 +92,9 @@ The prompt is a multi-line editor backed by `prompt_toolkit`.
 
 History is persisted to `~/.daemon/history`.
 
-> macOS note: the `Cmd` key never reaches the terminal — what feels like Cmd shortcuts in other tools is actually Meta (`Alt/Opt`). In macOS Terminal.app, enable *Profile → Keyboard → Use Option as Meta key*; in iTerm2, set the left/right Option key to *Esc+*. To make `Shift+Enter` work in iTerm2, add a key mapping that sends the escape sequence `\e\r`.
+> **Terminal setup (macOS):**
+> - The `Cmd` key never reaches the terminal — what feels like Cmd shortcuts in other tools is actually Meta (`Alt/Opt`). In macOS Terminal.app, enable *Profile → Keyboard → Use Option as Meta key*; in iTerm2, set the left/right Option key to *Esc+*.
+> - To make `Shift+Enter` insert a newline, add a terminal key mapping that sends the escape sequence `\e\r` (iTerm2: *Settings → Keys → Key Bindings → +*, key `Shift+Return`, action *Send Escape Sequence* with value `\r`). The same trick works in WezTerm, Ghostty, kitty, and Alacritty via their respective config files. After mapping, Shift+Enter is delivered as Alt+Enter and triggers the newline binding.
 
 ## Available Tools
 
