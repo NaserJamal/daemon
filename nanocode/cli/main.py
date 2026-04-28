@@ -1,221 +1,120 @@
-"""
-Main REPL loop for nanocode.
-
-Orchestrates the interactive conversation loop, handling user input,
-API calls, tool execution, and result display.
-
-Example:
-    >>> from nanocode.cli.main import main
-    >>> main()  # Starts interactive REPL
-"""
+"""Interactive REPL: read user input, drive the model, dispatch tool calls."""
 
 from __future__ import annotations
 
 import json
 import os
-import sys
 from typing import Any
 
-from nanocode.cli.io import Colors, Terminal
-from nanocode.cli.commands import execute_command, is_command
+from nanocode.cli import commands
+from nanocode.cli.io import BLUE, BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
 from nanocode.core.api import call_api
 from nanocode.core.config import get_settings
 from nanocode.core.prompt import get_default_system_prompt
-from nanocode.core.session import Session
 from nanocode.tools import get_schema, run_tool
 
+PREVIEW_LEN = 60
+ARG_PREVIEW_LEN = 50
 
-class Repl:
-    """
-    Interactive REPL for nanocode.
 
-    Manages the conversation loop, handling user input, API calls,
-    tool execution, and display of results. Supports slash commands
-    for special operations.
+def _print_banner() -> None:
+    settings = get_settings()
+    yolo_tag = f" | {RED}YOLO{RESET}" if settings.yolo else ""
+    print(
+        f"{BOLD}nanocode{RESET} | "
+        f"{DIM}{settings.model_name} | {settings.base_url} | {os.getcwd()}{RESET}"
+        f"{yolo_tag}\n"
+    )
 
-    Attributes:
-        terminal: Terminal I/O handler.
-        session: Message session manager.
-        running: Whether the REPL is actively running.
 
-    Example:
-        >>> repl = Repl()
-        >>> repl.run()
-    """
+def _assistant_message(message: dict[str, Any]) -> dict[str, Any]:
+    """Build the assistant message to append, echoing any reasoning fields verbatim."""
+    out: dict[str, Any] = {"role": "assistant", "content": message.get("content") or ""}
+    # Providers disagree on the field name for interleaved reasoning; pass
+    # through whichever the server returned so the next turn keeps it.
+    for key in ("reasoning_content", "reasoning", "reasoning_details"):
+        if message.get(key) is not None:
+            out[key] = message[key]
+    if message.get("tool_calls"):
+        out["tool_calls"] = message["tool_calls"]
+    return out
 
-    def __init__(self, terminal: Terminal | None = None) -> None:
-        """
-        Initialize the REPL.
 
-        Args:
-            terminal: Optional Terminal instance for I/O.
-        """
-        self.terminal = terminal or Terminal()
-        self.session = Session()
-        self.settings = get_settings()
-        self.schema = get_schema()
-        self.running = False
+def _result_preview(result: str) -> str:
+    lines = result.split("\n")
+    head = lines[0][:PREVIEW_LEN]
+    if len(lines) > 1:
+        return f"{head} ... +{len(lines) - 1} lines"
+    if len(lines[0]) > PREVIEW_LEN:
+        return f"{head}..."
+    return head
 
-    def print_banner(self) -> None:
-        """Print the startup banner."""
-        yolo_tag = (
-            f" | {Colors.RED}YOLO{Colors.RESET}"
-            if self.settings.yolo
-            else ""
-        )
-        self.terminal.print(
-            f"{Colors.BOLD}nanocode{Colors.RESET} | "
-            f"{Colors.DIM}{self.settings.model_name} | "
-            f"{self.settings.base_url} | "
-            f"{os.getcwd()}{Colors.RESET}{yolo_tag}\n"
-        )
 
-    def process_input(self, user_input: str) -> bool:
-        """
-        Process user input.
-
-        Args:
-            user_input: The user's input string.
-
-        Returns:
-            True to continue the loop, False to exit.
-        """
-        if not user_input:
-            return True
-
-        # Check for slash commands
-        if is_command(user_input):
-            args = user_input.split()
-            result = execute_command(args[0], args, self)
-            if result is not None:
-                return result
-            return True
-
-        # Regular message to API
-        self.session.add_user(user_input)
-        return self._process_api_response()
-
-    def _process_api_response(self) -> bool:
-        """
-        Call the API and process the response.
-
-        Returns:
-            True to continue, False to exit.
-        """
-        try:
-            response = call_api(
-                self.session.get_messages(),
-                settings=self.settings,
-                tools=self.schema,
-            )
-        except Exception as err:
-            self.terminal.print_error(f"Error: {err}")
-            return True
-
-        message = response["choices"][0]["message"]
+def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> None:
+    """Drive the model until it produces a turn with no tool calls."""
+    while True:
+        message = call_api(messages, tools=schema)["choices"][0]["message"]
         content = message.get("content") or ""
         tool_calls = message.get("tool_calls") or []
 
-        # Handle content
         if content:
-            self.terminal.print(f"\n{Colors.CYAN}⏺{Colors.RESET} ")
-            self.terminal.print_markdown(content)
+            print(f"\n{CYAN}⏺{RESET} {render_markdown(content)}")
 
-        # Build assistant message
-        assistant_msg: dict[str, Any] = {"role": "assistant", "content": content}
+        messages.append(_assistant_message(message))
 
-        # Pass through reasoning fields (provider-dependent naming)
-        for key in ("reasoning_content", "reasoning", "reasoning_details"):
-            if message.get(key) is not None:
-                assistant_msg[key] = message[key]
-
-        if tool_calls:
-            assistant_msg["tool_calls"] = tool_calls
-
-        self.session.messages.append(assistant_msg)
-
-        # If no tool calls, we're done
         if not tool_calls:
-            return True
+            return
 
-        # Execute tool calls
         for call in tool_calls:
-            tool_name = call["function"]["name"]
+            name = call["function"]["name"]
             try:
-                tool_args = json.loads(call["function"].get("arguments") or "{}")
+                args = json.loads(call["function"].get("arguments") or "{}")
             except json.JSONDecodeError:
-                tool_args = {}
+                args = {}
 
-            # Print tool execution
-            arg_preview = str(next(iter(tool_args.values()), ""))[:50]
-            self.terminal.print(
-                f"\n{Colors.GREEN}⏺ {tool_name.capitalize()}"
-                f"{Colors.RESET}({Colors.DIM}{arg_preview}{Colors.RESET})"
-            )
+            arg_preview = str(next(iter(args.values()), ""))[:ARG_PREVIEW_LEN]
+            print(f"\n{GREEN}⏺ {name.capitalize()}{RESET}({DIM}{arg_preview}{RESET})")
 
-            # Execute tool
-            result = run_tool(tool_name, tool_args)
+            result = run_tool(name, args)
+            print(f"  {DIM}⎿  {_result_preview(result)}{RESET}")
 
-            # Print result preview
-            self.terminal.print_result_preview(result)
-
-            # Add to session
-            self.session.add_tool(
-                content=result,
-                tool_call_id=call.get("id", ""),
-            )
-
-        return True
-
-    def run(self) -> None:
-        """
-        Run the interactive REPL loop.
-        """
-        self.running = True
-        self.print_banner()
-
-        while self.running:
-            try:
-                # Print separator
-                self.terminal.print(self.terminal.separator())
-                user_input = self.terminal.input(f"{Colors.PROMPT}❯{Colors.RESET} ")
-                self.terminal.print(self.terminal.separator())
-
-                if not self.process_input(user_input):
-                    break
-
-                self.terminal.print()  # Blank line
-
-            except KeyboardInterrupt:
-                break
-            except EOFError:
-                break
-            except Exception as err:
-                self.terminal.print_error(f"⏺ Error: {err}")
-
-        self.running = False
-
-    def stop(self) -> None:
-        """Stop the REPL loop."""
-        self.running = False
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.get("id", ""),
+                "content": result,
+            })
 
 
 def main() -> None:
-    """
-    Main entry point for the CLI.
+    """Run the REPL. Returns when the user quits or the input stream closes."""
+    _print_banner()
+    schema = get_schema()
+    messages: list[dict[str, Any]] = [
+        {"role": "system", "content": get_default_system_prompt()}
+    ]
 
-    Loads configuration and starts the interactive REPL.
-    """
-    # Ensure .env is loaded
-    from nanocode.core.config import load_dotenv
-    load_dotenv()
+    while True:
+        try:
+            print(separator())
+            user_input = input(f"{BOLD}{BLUE}❯{RESET} ").strip()
+            print(separator())
+            if not user_input:
+                continue
 
-    try:
-        repl = Repl()
-        repl.run()
-    except Exception as e:
-        print(f"{Colors.RED}Fatal error: {e}{Colors.RESET}", file=sys.stderr)
-        sys.exit(1)
+            handled = commands.handle(user_input, messages)
+            if handled is False:
+                break
+            if handled is True:
+                continue
+
+            messages.append({"role": "user", "content": user_input})
+            _run_turn(messages, schema)
+            print()
+
+        except (KeyboardInterrupt, EOFError):
+            break
+        except Exception as err:
+            print(f"{RED}⏺ Error: {err}{RESET}")
 
 
 if __name__ == "__main__":

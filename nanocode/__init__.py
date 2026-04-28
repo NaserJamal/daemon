@@ -1,44 +1,28 @@
-"""
-nanocode - Minimal agentic coding harness for any OpenAI-compatible endpoint.
+"""nanocode - minimal agentic coding harness for any OpenAI-compatible endpoint."""
 
-This package provides a modular, extensible CLI for AI-assisted coding tasks.
-It supports various tools for file operations, code search, and shell execution
-with built-in safety features.
-
-Example:
-    >>> import nanocode
-    >>> from nanocode.core.config import Settings
-    >>> settings = Settings()
-    >>> print(settings.model_name)
-    'gpt-4o-mini'
-"""
-
-__version__ = "0.1.0"
-__author__ = "Nanocode Contributors"
-
-# Core exports
-from nanocode.core.config import Settings, load_dotenv
 from nanocode.core.api import call_api
-from nanocode.core.session import Session
+from nanocode.core.config import Settings, get_settings, load_dotenv
 from nanocode.tools import (
-    register_tool,
+    BaseTool,
+    get_schema,
     get_tool,
     list_tools,
-    get_schema,
+    register_tool,
     run_tool,
-    clear_registry,
 )
 
+__version__ = "0.1.0"
+
 __all__ = [
-    "__version__",
+    "BaseTool",
     "Settings",
-    "load_dotenv",
+    "__version__",
     "call_api",
-    "Session",
-    "register_tool",
+    "get_schema",
+    "get_settings",
     "get_tool",
     "list_tools",
-    "get_schema",
+    "load_dotenv",
+    "register_tool",
     "run_tool",
-    "clear_registry",
 ]

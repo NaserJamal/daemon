@@ -1,27 +1,15 @@
-"""
-Danger pattern detection for nanocode.
+"""Best-effort detection of dangerous shell commands.
 
-Detects potentially harmful bash commands using regex patterns.
-This is best-effort detection - a determined actor can obfuscate commands.
-
-Example:
-    >>> from nanocode.safety.danger import danger_reason
-    >>> danger_reason("rm -rf /")
-    'rm'
-    >>> danger_reason("ls -la")
-    None
+Detection is regex-based and intentionally conservative; a determined
+caller can always obfuscate around it. The goal is to surface obvious
+foot-guns to the user, not to provide airtight sandboxing.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Pattern
 
-from nanocode.core.config import Settings, get_settings
-
-
-# Danger patterns that warrant human confirmation before bash execution.
-# Format: (regex_pattern, label_description)
+# (regex, label). Order doesn't matter — first match wins.
 DANGER_PATTERNS: list[tuple[str, str]] = [
     (r"\brm\s+(-[a-zA-Z]*[rRfF][a-zA-Z]*\s+)?", "rm"),
     (r"\brmdir\b", "rmdir"),
@@ -52,164 +40,14 @@ DANGER_PATTERNS: list[tuple[str, str]] = [
     (r"\beval\b", "eval"),
 ]
 
-
-class DangerDetector:
-    """
-    Detects potentially dangerous commands for safety confirmation.
-
-    Uses regex patterns to identify commands that could cause data loss,
-    system changes, or other harmful effects. Detection is best-effort
-    and should not be considered foolproof.
-
-    Attributes:
-        patterns: List of (compiled_pattern, label) tuples.
-        categories: Dictionary mapping category names to pattern lists.
-
-    Example:
-        >>> detector = DangerDetector()
-        >>> reason = detector.detect("rm -rf /")
-        >>> print(reason)
-        'rm'
-    """
-
-    def __init__(
-        self,
-        patterns: list[tuple[str, str]] | None = None,
-        compiled: bool = False,
-    ) -> None:
-        """
-        Initialize the danger detector.
-
-        Args:
-            patterns: Optional list of (pattern, label) tuples.
-                     Uses default patterns if None.
-            compiled: Whether to compile patterns immediately.
-        """
-        self._patterns: list[tuple[Pattern[str], str]]
-        if patterns is None:
-            patterns = DANGER_PATTERNS
-
-        if compiled:
-            self._patterns = [
-                (re.compile(pattern), label) for pattern, label in patterns
-            ]
-        else:
-            # Store raw patterns, compile lazily
-            self._patterns = patterns  # type: ignore[assignment]
-
-    def _ensure_compiled(self) -> None:
-        """Ensure patterns are compiled (lazy compilation)."""
-        if self._patterns and isinstance(self._patterns[0], tuple):
-            first = self._patterns[0]
-            if isinstance(first[0], str):
-                self._patterns = [
-                    (re.compile(pattern), label)  # type: ignore[misc]
-                    for pattern, label in self._patterns  # type: ignore[misc]
-                ]
-
-    def detect(self, command: str) -> str | None:
-        """
-        Detect danger in a command string.
-
-        Args:
-            command: The bash command to check.
-
-        Returns:
-            The label of the detected danger pattern, or None if safe.
-        """
-        self._ensure_compiled()
-        for pattern, label in self._patterns:  # type: ignore[union-attr]
-            if pattern.search(command):  # type: ignore[union-attr]
-                return label
-        return None
-
-    def add_pattern(self, pattern: str, label: str) -> None:
-        """
-        Add a new danger pattern.
-
-        Args:
-            pattern: Regex pattern to match.
-            label: Human-readable label for the danger.
-        """
-        self._ensure_compiled()
-        compiled = re.compile(pattern)
-        self._patterns.append((compiled, label))  # type: ignore[union-attr]
-
-    def remove_pattern(self, label: str) -> int:
-        """
-        Remove danger patterns by label.
-
-        Args:
-            label: The label of patterns to remove.
-
-        Returns:
-            Number of patterns removed.
-        """
-        self._ensure_compiled()
-        original_len = len(self._patterns)  # type: ignore[union-attr]
-        self._patterns = [
-            (p, l) for p, l in self._patterns if l != label  # type: ignore[misc]
-        ]
-        return original_len - len(self._patterns)  # type: ignore[union-attr]
-
-    def is_safe(self, command: str) -> bool:
-        """
-        Check if a command is safe (no danger detected).
-
-        Args:
-            command: The bash command to check.
-
-        Returns:
-            True if the command is considered safe.
-        """
-        return self.detect(command) is None
-
-    def get_categories(self) -> dict[str, list[str]]:
-        """
-        Get danger pattern categories.
-
-        Returns:
-            Dictionary mapping category names to pattern labels.
-        """
-        self._ensure_compiled()
-        categories: dict[str, list[str]] = {}
-        for _, label in self._patterns:  # type: ignore[union-attr]
-            # Extract category from label (e.g., "git force push" -> "git")
-            category = label.split()[0] if label else "unknown"
-            if category not in categories:
-                categories[category] = []
-            if label not in categories[category]:
-                categories[category].append(label)
-        return categories
+_COMPILED: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(pattern), label) for pattern, label in DANGER_PATTERNS
+]
 
 
 def danger_reason(cmd: str) -> str | None:
-    """
-    Detect danger in a command using global patterns.
-
-    This is a convenience function that uses the default DangerDetector.
-
-    Args:
-        cmd: The bash command to check.
-
-    Returns:
-        The danger label, or None if the command is considered safe.
-    """
-    return DangerDetector().detect(cmd)
-
-
-# Module-level singleton detector
-_detector: DangerDetector | None = None
-
-
-def get_detector() -> DangerDetector:
-    """
-    Get the module-level danger detector singleton.
-
-    Returns:
-        The singleton DangerDetector instance.
-    """
-    global _detector
-    if _detector is None:
-        _detector = DangerDetector()
-    return _detector
+    """Return the label of the first matching danger pattern, or None."""
+    for pattern, label in _COMPILED:
+        if pattern.search(cmd):
+            return label
+    return None

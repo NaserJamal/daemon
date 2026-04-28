@@ -1,16 +1,6 @@
-"""
-Safety module for nanocode.
+"""Safety: danger detection and user confirmation."""
 
-Provides danger detection and user confirmation for potentially
-harmful operations, especially bash commands.
-"""
+from nanocode.safety.confirm import confirm
+from nanocode.safety.danger import DANGER_PATTERNS, danger_reason
 
-from nanocode.safety.danger import DangerDetector, danger_reason
-from nanocode.safety.confirm import confirm, ConfirmPrompt
-
-__all__ = [
-    "DangerDetector",
-    "danger_reason",
-    "confirm",
-    "ConfirmPrompt",
-]
+__all__ = ["DANGER_PATTERNS", "confirm", "danger_reason"]

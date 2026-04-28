@@ -1,127 +1,54 @@
-"""
-Tool registry for nanocode.
+"""Global tool registry.
 
-Provides the central registry for all tools. Tools register themselves
-using the @register_tool decorator.
-
-Example:
-    >>> from nanocode.tools.registry import register_tool, get_tool, list_tools
-    >>> @register_tool
-    ... class MyTool(BaseTool):
-    ...     name = "my_tool"
-    ...     ...
+Tools register themselves via the ``@register_tool`` decorator at
+import time; the CLI imports ``nanocode.tools`` once at startup, which
+triggers registration of every built-in tool.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-# Module-level registry: name -> (tool_instance, description, parameters)
-_registry: dict[str, tuple[Any, str, dict[str, str]]] = {}
+from nanocode.tools.base import BaseTool
+
+_registry: dict[str, BaseTool] = {}
 
 
-def register_tool(tool_class: type) -> type:
-    """
-    Decorator to register a tool with the global registry.
-
-    The tool class must have class attributes: name, description, parameters.
-
-    Args:
-        tool_class: The tool class to register.
-
-    Returns:
-        The same class (for use as a decorator).
-
-    Example:
-        >>> @register_tool
-        ... class MyTool(BaseTool):
-        ...     name = "my_tool"
-        ...     description = "Does something useful"
-        ...     parameters = {"arg": "string"}
-        ...     def execute(self, args):
-        ...         return "result"
-    """
-    tool_instance = tool_class()
-    name = tool_instance.name
-    description = tool_instance.description
-    parameters = tool_instance.parameters
-
-    _registry[name] = (tool_instance, description, parameters)
+def register_tool(tool_class: type[BaseTool]) -> type[BaseTool]:
+    """Class decorator: instantiate the tool and register it by name."""
+    instance = tool_class()
+    _registry[instance.name] = instance
     return tool_class
 
 
-def unregister_tool(name: str) -> bool:
-    """
-    Remove a tool from the registry.
-
-    Args:
-        name: The name of the tool to remove.
-
-    Returns:
-        True if the tool was removed, False if it wasn't registered.
-    """
-    if name in _registry:
-        del _registry[name]
-        return True
-    return False
-
-
-def get_tool(name: str) -> Any | None:
-    """
-    Get a registered tool by name.
-
-    Args:
-        name: The name of the tool.
-
-    Returns:
-        The tool instance, or None if not found.
-    """
-    entry = _registry.get(name)
-    if entry:
-        return entry[0]
-    return None
+def get_tool(name: str) -> BaseTool | None:
+    return _registry.get(name)
 
 
 def list_tools() -> dict[str, dict[str, Any]]:
-    """
-    List all registered tools.
-
-    Returns:
-        Dictionary mapping tool names to their info dictionaries.
-    """
-    result = {}
-    for name, (_, description, parameters) in _registry.items():
-        result[name] = {
-            "description": description,
-            "parameters": parameters,
-        }
-    return result
+    """Return ``{name: {description, parameters}}`` for every registered tool."""
+    return {
+        name: {"description": tool.description, "parameters": tool.parameters}
+        for name, tool in _registry.items()
+    }
 
 
 def get_schema() -> list[dict[str, Any]]:
-    """
-    Generate the OpenAI function-calling schema for all tools.
-
-    Returns:
-        List of tool schema dictionaries for API calls.
-    """
+    """Build the OpenAI function-calling schema for every registered tool."""
     schema = []
-    for name, (_, description, params) in _registry.items():
+    for name, tool in _registry.items():
         properties: dict[str, dict[str, str]] = {}
         required: list[str] = []
-
-        for param_name, param_type in params.items():
+        for param_name, param_type in tool.parameters.items():
             optional = param_type.endswith("?")
-            clean_type = param_type.rstrip("?")
-            properties[param_name] = {"type": clean_type}
+            properties[param_name] = {"type": param_type.rstrip("?")}
             if not optional:
                 required.append(param_name)
-
         schema.append({
             "type": "function",
             "function": {
                 "name": name,
-                "description": description,
+                "description": tool.description,
                 "parameters": {
                     "type": "object",
                     "properties": properties,
@@ -129,49 +56,15 @@ def get_schema() -> list[dict[str, Any]]:
                 },
             },
         })
-
     return schema
 
 
 def run_tool(name: str, args: dict[str, Any]) -> str:
-    """
-    Execute a registered tool with the given arguments.
-
-    Args:
-        name: The name of the tool to execute.
-        args: Dictionary of arguments to pass to the tool.
-
-    Returns:
-        The tool's output string, or an error message.
-
-    Example:
-        >>> result = run_tool("read", {"path": "file.txt"})
-        >>> print(result)
-    """
-    tool = get_tool(name)
+    """Execute a registered tool. Unknown names and exceptions become error strings."""
+    tool = _registry.get(name)
     if tool is None:
         return f"error: unknown tool {name!r}"
-
     try:
         return tool.execute(args)
     except Exception as err:
         return f"error: {type(err).__name__}: {err}"
-
-
-def clear_registry() -> None:
-    """
-    Clear all registered tools.
-
-    Useful for testing or resetting the tool set.
-    """
-    _registry.clear()
-
-
-def get_registry() -> dict[str, tuple[Any, str, dict[str, str]]]:
-    """
-    Get the raw registry dictionary.
-
-    Returns:
-        The internal registry dictionary.
-    """
-    return _registry.copy()
