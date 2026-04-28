@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from nanocode.core.config import get_settings
-from nanocode.tools.base import BaseTool
-from nanocode.tools.registry import register_tool
+from daemon.core.config import get_settings
+from daemon.tools.base import BaseTool
+from daemon.tools.registry import register_tool
 
 
 @register_tool

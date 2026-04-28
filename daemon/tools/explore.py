@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from nanocode.tools.base import BaseTool
-from nanocode.tools.registry import register_tool
+from daemon.tools.base import BaseTool
+from daemon.tools.registry import register_tool
 
 
 @register_tool
@@ -24,9 +24,9 @@ class ExploreTool(BaseTool):
         # Local imports keep the module load order clean: this tool is
         # registered at package import, but the API client and registry
         # only need to resolve when an `explore` call actually fires.
-        from nanocode.core.api import call_api
-        from nanocode.core.prompt import get_default_system_prompt
-        from nanocode.tools.registry import get_schema, run_tool
+        from daemon.core.api import call_api
+        from daemon.core.prompt import get_default_system_prompt
+        from daemon.tools.registry import get_schema, run_tool
 
         sub: list[dict[str, Any]] = [
             {"role": "system", "content": get_default_system_prompt()},

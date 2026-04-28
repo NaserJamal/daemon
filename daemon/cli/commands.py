@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from nanocode.cli.io import GREEN, RESET
-from nanocode.core.prompt import get_default_system_prompt
+from daemon.cli.io import GREEN, RESET
+from daemon.core.prompt import get_default_system_prompt
 
 QUIT_INPUTS = {"/q", "/quit", "/exit", "exit"}
 

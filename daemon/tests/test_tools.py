@@ -1,6 +1,6 @@
 """Tests for tools and danger detection.
 
-Run with: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest nanocode/tests/
+Run with: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest daemon/tests/
 """
 
 from __future__ import annotations
@@ -9,10 +9,10 @@ import os
 from typing import Any
 
 # Force YOLO so the bash tool never blocks on confirmation prompts in tests.
-os.environ["NANOCODE_YOLO"] = "1"
+os.environ["daemon_YOLO"] = "1"
 
-from nanocode.safety.danger import danger_reason
-from nanocode.tools import run_tool
+from daemon.safety.danger import danger_reason
+from daemon.tools import run_tool
 
 
 class TestReadTool:

@@ -7,7 +7,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from nanocode.core.config import Settings, get_settings
+from daemon.core.config import Settings, get_settings
 
 
 def call_api(
@@ -28,7 +28,7 @@ def call_api(
     if settings is None:
         settings = get_settings()
     if tools is None:
-        from nanocode.tools import get_schema  # local import: avoid cycle
+        from daemon.tools import get_schema  # local import: avoid cycle
         tools = get_schema()
 
     body: dict[str, Any] = {"model": settings.model_name, "messages": messages}

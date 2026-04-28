@@ -46,7 +46,7 @@ class Settings(BaseModel):
             base_url=env.get("BASE_URL", cls.model_fields["base_url"].default).rstrip("/"),
             api_key=env.get("API_KEY", ""),
             model_name=env.get("MODEL_NAME", cls.model_fields["model_name"].default),
-            yolo=env.get("NANOCODE_YOLO", "").lower() in ("1", "true", "yes"),
+            yolo=env.get("daemon_YOLO", "").lower() in ("1", "true", "yes"),
         )
 
 

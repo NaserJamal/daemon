@@ -6,11 +6,11 @@ import subprocess
 import threading
 from typing import Any
 
-from nanocode.core.config import get_settings
-from nanocode.safety.confirm import confirm
-from nanocode.safety.danger import danger_reason
-from nanocode.tools.base import BaseTool
-from nanocode.tools.registry import register_tool
+from daemon.core.config import get_settings
+from daemon.safety.confirm import confirm
+from daemon.safety.danger import danger_reason
+from daemon.tools.base import BaseTool
+from daemon.tools.registry import register_tool
 
 DIM = "\033[2m"
 RESET = "\033[0m"

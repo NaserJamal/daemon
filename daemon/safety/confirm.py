@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from nanocode.core.config import get_settings
+from daemon.core.config import get_settings
 
 RESET = "\033[0m"
 BOLD = "\033[1m"

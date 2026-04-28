@@ -6,12 +6,12 @@ import json
 import os
 from typing import Any
 
-from nanocode.cli import commands
-from nanocode.cli.io import BLUE, BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
-from nanocode.core.api import call_api
-from nanocode.core.config import get_settings
-from nanocode.core.prompt import get_default_system_prompt
-from nanocode.tools import get_schema, run_tool
+from daemon.cli import commands
+from daemon.cli.io import BLUE, BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
+from daemon.core.api import call_api
+from daemon.core.config import get_settings
+from daemon.core.prompt import get_default_system_prompt
+from daemon.tools import get_schema, run_tool
 
 PREVIEW_LEN = 60
 ARG_PREVIEW_LEN = 50
@@ -21,7 +21,7 @@ def _print_banner() -> None:
     settings = get_settings()
     yolo_tag = f" | {RED}YOLO{RESET}" if settings.yolo else ""
     print(
-        f"{BOLD}nanocode{RESET} | "
+        f"{BOLD}daemon{RESET} | "
         f"{DIM}{settings.model_name} | {settings.base_url} | {os.getcwd()}{RESET}"
         f"{yolo_tag}\n"
     )

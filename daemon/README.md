@@ -1,8 +1,8 @@
-# nanocode
+# daemon
 
 Minimal agentic coding harness for any OpenAI-compatible endpoint.
 
-Nanocode is a lightweight, modular CLI tool that brings AI assistance to your terminal. It provides file operations, code search, shell execution, and recursive research capabilities—all powered by OpenAI-compatible APIs.
+daemon is a lightweight, modular CLI tool that brings AI assistance to your terminal. It provides file operations, code search, shell execution, and recursive research capabilities—all powered by OpenAI-compatible APIs.
 
 ## Features
 
@@ -17,8 +17,8 @@ Nanocode is a lightweight, modular CLI tool that brings AI assistance to your te
 
 ```bash
 # Clone the repository
-git clone https://github.com/naserjamal/nanocode.git
-cd nanocode
+git clone https://github.com/naserjamal/daemon.git
+cd daemon
 
 # Install in development mode
 pip install -e .
@@ -51,10 +51,10 @@ export MODEL_NAME=gpt-4o-mini
 
 ```bash
 # Using the module
-python -m nanocode
+python -m daemon
 
 # Or if installed
-nanocode
+daemon
 ```
 
 ### REPL Commands
@@ -127,14 +127,14 @@ Spawn a sub-agent for recursive research. Only shows the final summary.
 
 ## Safety
 
-Nanocode includes danger detection for potentially harmful commands. When a dangerous command is detected, you'll be prompted for confirmation:
+daemon includes danger detection for potentially harmful commands. When a dangerous command is detected, you'll be prompted for confirmation:
 
 - File deletion (`rm -rf`, etc.)
 - System modifications (`sudo`, `chmod -R`, etc.)
 - Git operations (`git reset --hard`, etc.)
 - Network downloads piped to shell (`curl | sh`, etc.)
 
-Set `NANOCODE_YOLO=1` to skip confirmations (use with caution).
+Set `daemon_YOLO=1` to skip confirmations (use with caution).
 
 ## Configuration Options
 
@@ -143,12 +143,12 @@ Set `NANOCODE_YOLO=1` to skip confirmations (use with caution).
 | `BASE_URL` | `https://api.openai.com/v1` | API endpoint URL |
 | `API_KEY` | (empty) | API authentication key |
 | `MODEL_NAME` | `gpt-4o-mini` | Model identifier |
-| `NANOCODE_YOLO` | `false` | Skip dangerous command confirmations |
+| `daemon_YOLO` | `false` | Skip dangerous command confirmations |
 
 ## Architecture
 
 ```
-nanocode/
+daemon/
 ├── core/           # Core functionality
 │   ├── config.py   # Configuration management (Pydantic)
 │   ├── api.py      # API client

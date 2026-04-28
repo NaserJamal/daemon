@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nanocode"
+name = "daemon"
 version = "0.1.0"
 description = "Minimal agentic coding harness for any OpenAI-compatible endpoint"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Nanocode Contributors"}
+    {name = "daemon Contributors"}
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -35,18 +35,18 @@ dev = [
 ]
 
 [project.scripts]
-nanocode = "nanocode.cli.main:main"
+daemon = "daemon.cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/naserjamal/nanocode"
-Repository = "https://github.com/naserjamal/nanocode"
+Homepage = "https://github.com/naserjamal/daemon"
+Repository = "https://github.com/naserjamal/daemon"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["nanocode*"]
+include = ["daemon*"]
 
 [tool.setuptools.package-data]
-nanocode = ["pyproject.toml"]
+daemon = ["pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

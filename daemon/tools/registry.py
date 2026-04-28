@@ -1,7 +1,7 @@
 """Global tool registry.
 
 Tools register themselves via the ``@register_tool`` decorator at
-import time; the CLI imports ``nanocode.tools`` once at startup, which
+import time; the CLI imports ``daemon.tools`` once at startup, which
 triggers registration of every built-in tool.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from nanocode.tools.base import BaseTool
+from daemon.tools.base import BaseTool
 
 _registry: dict[str, BaseTool] = {}
 

@@ -4,8 +4,8 @@ Importing this package eagerly imports the tool modules below, each of
 which calls ``@register_tool`` at module load to populate the registry.
 """
 
-from nanocode.tools.base import BaseTool
-from nanocode.tools.registry import (
+from daemon.tools.base import BaseTool
+from daemon.tools.registry import (
     get_schema,
     get_tool,
     list_tools,
@@ -14,7 +14,7 @@ from nanocode.tools.registry import (
 )
 
 # Side-effect imports: each module registers its tool on import.
-from nanocode.tools import bash, edit, explore, glob, grep, read, write  # noqa: F401
+from daemon.tools import bash, edit, explore, glob, grep, read, write  # noqa: F401
 
 __all__ = [
     "BaseTool",

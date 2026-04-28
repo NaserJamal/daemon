@@ -1,8 +1,8 @@
-"""nanocode - minimal agentic coding harness for any OpenAI-compatible endpoint."""
+"""daemon - minimal agentic coding harness for any OpenAI-compatible endpoint."""
 
-from nanocode.core.api import call_api
-from nanocode.core.config import Settings, get_settings, load_dotenv
-from nanocode.tools import (
+from daemon.core.api import call_api
+from daemon.core.config import Settings, get_settings, load_dotenv
+from daemon.tools import (
     BaseTool,
     get_schema,
     get_tool,

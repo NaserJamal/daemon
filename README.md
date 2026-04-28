@@ -1,4 +1,4 @@
-# nanocode
+# daemon
 
 Minimal agentic coding harness for any OpenAI-compatible API. Single Python file, zero dependencies, ~250 lines.
 
@@ -18,14 +18,14 @@ Set three environment variables and run:
 export BASE_URL="https://api.openai.com/v1"
 export API_KEY="your-key"
 export MODEL_NAME="gpt-4o-mini"
-python nanocode.py
+python daemon.py
 ```
 
 ### Optional Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `NANOCODE_YOLO` | Set to `1`, `true`, or `yes` to skip confirmation prompts for dangerous bash commands (e.g., `rm`, `sudo`, git force-push) |
+| `daemon_YOLO` | Set to `1`, `true`, or `yes` to skip confirmation prompts for dangerous bash commands (e.g., `rm`, `sudo`, git force-push) |
 
 ### Examples
 
@@ -74,9 +74,9 @@ export MODEL_NAME="qwen2.5-coder"
 ────────────────────────────────────────
 
 ⏺ Glob(**/*.py)
-  ⎿  nanocode.py
+  ⎿  daemon.py
 
-⏺ There's one Python file: nanocode.py
+⏺ There's one Python file: daemon.py
 ```
 
 ## License

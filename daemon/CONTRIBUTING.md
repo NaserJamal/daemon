@@ -1,6 +1,6 @@
-# Contributing to nanocode
+# Contributing to daemon
 
-Thank you for your interest in contributing to nanocode! This guide will help you get started with developing, testing, and extending the project.
+Thank you for your interest in contributing to daemon! This guide will help you get started with developing, testing, and extending the project.
 
 ## Getting Started
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing to nanocode! This guide will help yo
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/naserjamal/nanocode.git
-   cd nanocode
+   git clone https://github.com/naserjamal/daemon.git
+   cd daemon
    ```
 
 2. Create a virtual environment:
@@ -30,13 +30,13 @@ Thank you for your interest in contributing to nanocode! This guide will help yo
 
 4. Verify the installation:
    ```bash
-   python -m nanocode --help
+   python -m daemon --help
    ```
 
 ## Project Structure
 
 ```
-nanocode/
+daemon/
 ├── core/           # Core functionality
 │   ├── config.py   # Configuration (Pydantic Settings)
 │   ├── api.py      # API client (call_api)
@@ -61,17 +61,17 @@ Tools extend the AI's capabilities. Here's how to add a new tool:
 
 ### 1. Create the Tool File
 
-Create a new file in `nanocode/tools/` (e.g., `mytool.py`):
+Create a new file in `daemon/tools/` (e.g., `mytool.py`):
 
 ```python
-"""My custom tool for nanocode."""
+"""My custom tool for daemon."""
 
 from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from nanocode.tools.base import BaseTool
-from nanocode.tools import register_tool
+from daemon.tools.base import BaseTool
+from daemon.tools import register_tool
 
 
 @register_tool
@@ -124,8 +124,8 @@ class MyTool(BaseTool):
 The `@register_tool` decorator automatically registers the tool with the global registry. Just importing the module is enough:
 
 ```python
-# In nanocode/tools/__init__.py
-from nanocode.tools import mytool  # noqa: F401
+# In daemon/tools/__init__.py
+from daemon.tools import mytool  # noqa: F401
 ```
 
 ### 3. Parameter Types
@@ -165,8 +165,8 @@ Slash commands provide REPL utilities like `/help` and `/clear`.
 ### 1. Register a Command
 
 ```python
-# In nanocode/cli/commands.py
-from nanocode.cli.commands import register_command
+# In daemon/cli/commands.py
+from daemon.cli.commands import register_command
 
 @register_command(
     "/mycmd",
@@ -191,7 +191,7 @@ def my_command_handler(args: list[str], repl) -> bool | None:
 pytest
 
 # Run with coverage
-pytest --cov=nanocode --cov-report=html
+pytest --cov=daemon --cov-report=html
 
 # Run specific test file
 pytest tests/test_tools.py
@@ -251,7 +251,7 @@ def my_function(param: str) -> str:
 To add new danger patterns for bash safety:
 
 ```python
-# In nanocode/safety/danger.py
+# In daemon/safety/danger.py
 DANGER_PATTERNS = [
     ...
     (r"\bnew_pattern\b", "description"),
@@ -261,7 +261,7 @@ DANGER_PATTERNS = [
 Or dynamically:
 
 ```python
-from nanocode.safety.danger import get_detector
+from daemon.safety.danger import get_detector
 
 detector = get_detector()
 detector.add_pattern(r"\bmy_command\b", "my_command")
@@ -283,7 +283,7 @@ detector.add_pattern(r"\bmy_command\b", "my_command")
 When reporting issues, please include:
 
 - Python version
-- nanocode version
+- daemon version
 - Steps to reproduce
 - Expected vs actual behavior
 - Error messages or logs

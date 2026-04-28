@@ -6,8 +6,8 @@ import glob as globlib
 import os
 from typing import Any
 
-from nanocode.tools.base import BaseTool
-from nanocode.tools.registry import register_tool
+from daemon.tools.base import BaseTool
+from daemon.tools.registry import register_tool
 
 
 def _mtime(path: str) -> float:

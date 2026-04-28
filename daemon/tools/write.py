@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from nanocode.tools.base import BaseTool
-from nanocode.tools.registry import register_tool
+from daemon.tools.base import BaseTool
+from daemon.tools.registry import register_tool
 
 
 @register_tool
