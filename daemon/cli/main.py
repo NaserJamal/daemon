@@ -7,7 +7,8 @@ import os
 from typing import Any
 
 from daemon.cli import commands
-from daemon.cli.io import BLUE, BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
+from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
+from daemon.cli.prompt import read_input
 from daemon.core.api import call_api
 from daemon.core.config import get_settings
 from daemon.core.prompt import get_default_system_prompt
@@ -96,7 +97,7 @@ def main() -> None:
     while True:
         try:
             print(separator())
-            user_input = input(f"{BOLD}{BLUE}❯{RESET} ").strip()
+            user_input = read_input().strip()
             print(separator())
             if not user_input:
                 continue

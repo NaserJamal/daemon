@@ -67,6 +67,27 @@ daemon
 | `/tools` | List available tools |
 | `/env` | Show current configuration |
 
+### Key bindings
+
+The prompt is a multi-line editor backed by `prompt_toolkit`.
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Submit |
+| `Shift+Enter` | Insert newline (iTerm2, kitty, WezTerm, Ghostty, VS Code terminal) |
+| `Alt/Opt+Enter` | Insert newline (universal fallback when Meta is enabled) |
+| `\` then `Enter` | Insert newline (works in any terminal) |
+| `↑` / `↓` | Move between lines; at top/bottom edge, walk through history |
+| `Ctrl+R` | Reverse history search |
+| `Ctrl+A` / `Ctrl+E` | Jump to start / end of line |
+| `Ctrl+W` | Delete previous word |
+| `Ctrl+C` | Cancel current input |
+| `Ctrl+D` | Exit (on empty buffer) |
+
+History is persisted to `~/.daemon/history`.
+
+> macOS note: the `Cmd` key never reaches the terminal — what feels like Cmd shortcuts in other tools is actually Meta (`Alt/Opt`). In macOS Terminal.app, enable *Profile → Keyboard → Use Option as Meta key*; in iTerm2, set the left/right Option key to *Esc+*. To make `Shift+Enter` work in iTerm2, add a key mapping that sends the escape sequence `\e\r`.
+
 ## Available Tools
 
 ### read
