@@ -8,6 +8,7 @@ from typing import Any
 
 from daemon.cli.configure import run_configure
 from daemon.cli.io import DIM, GREEN, RED, RESET
+from daemon.core import usage
 from daemon.core.prompt import get_default_system_prompt
 
 Handler = Callable[[list[str], list[dict[str, Any]]], "bool | None"]
@@ -85,7 +86,28 @@ def _cmd_help(_args: list[str], _messages: list[dict[str, Any]]) -> bool | None:
 @register_command("/clear", "Reset the conversation history", aliases=("/c",))
 def _cmd_clear(_args: list[str], messages: list[dict[str, Any]]) -> bool | None:
     messages[:] = [{"role": "system", "content": get_default_system_prompt()}]
+    usage.reset()
     print(f"{GREEN}⏺ Cleared conversation{RESET}")
+    return True
+
+
+@register_command(
+    "/usage",
+    "Show token usage; pass on/off to toggle per-turn display",
+    aliases=("/u",),
+)
+def _cmd_usage(args: list[str], _messages: list[dict[str, Any]]) -> bool | None:
+    if args:
+        choice = args[0].lower()
+        if choice in ("on", "off"):
+            usage.set_show_per_turn(choice == "on")
+            state = "on" if choice == "on" else "off"
+            print(f"{GREEN}⏺ Per-turn usage display: {state}{RESET}")
+            return True
+        print(f"{RED}Usage: /usage [on|off]{RESET}")
+        return True
+    state = "on" if usage.show_per_turn() else "off"
+    print(f"{GREEN}⏺ {usage.format_summary()}{RESET} {DIM}(per-turn: {state}){RESET}")
     return True
 
 
