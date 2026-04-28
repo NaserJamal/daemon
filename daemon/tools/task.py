@@ -1,4 +1,4 @@
-"""Explore tool: spawn a sub-agent and return only its final answer."""
+"""Task tool: spawn a sub-agent and return only its final answer."""
 
 from __future__ import annotations
 
@@ -10,20 +10,20 @@ from daemon.tools.registry import register_tool
 
 
 @register_tool
-class ExploreTool(BaseTool):
-    name = "explore"
+class TaskTool(BaseTool):
+    name = "task"
     description = (
-        "Spawn a sub-agent with the same tools to investigate something. "
+        "Spawn a sub-agent with the same tools to handle a delegated task. "
         "You only see its final summary - tool calls and intermediate steps are hidden. "
-        "Use for open-ended research ('find where X is handled', 'summarize module Y') "
-        "to keep your own context clean."
+        "Use for open-ended research ('find where X is handled', 'summarize module Y'), "
+        "refactoring, or any other sub-task you want to offload to keep your own context clean."
     )
     parameters = {"prompt": "string"}
 
     def execute(self, args: dict[str, Any]) -> str:
         # Local imports keep the module load order clean: this tool is
         # registered at package import, but the API client and registry
-        # only need to resolve when an `explore` call actually fires.
+        # only need to resolve when a `task` call actually fires.
         from daemon.core.api import call_api
         from daemon.core.prompt import get_default_system_prompt
         from daemon.tools.registry import get_schema, run_tool

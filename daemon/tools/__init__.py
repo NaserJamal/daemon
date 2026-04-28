@@ -14,7 +14,7 @@ from daemon.tools.registry import (
 )
 
 # Side-effect imports: each module registers its tool on import.
-from daemon.tools import bash, edit, explore, glob, grep, read, write  # noqa: F401
+from daemon.tools import bash, edit, glob, grep, read, task, write  # noqa: F401
 
 __all__ = [
     "BaseTool",

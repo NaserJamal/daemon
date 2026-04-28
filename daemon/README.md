@@ -117,12 +117,12 @@ Execute shell commands with configurable timeout.
 # bash(cmd="ls -la", timeout=30)
 ```
 
-### explore
-Spawn a sub-agent for recursive research. Only shows the final summary.
+### task
+Spawn a sub-agent to delegate a task. Only shows the final summary.
 
 ```python
 # Usage in conversation:
-# explore(prompt="Investigate how the auth system works")
+# task(prompt="Investigate how the auth system works")
 ```
 
 ## Safety
@@ -162,7 +162,7 @@ daemon/
 │   ├── glob.py     # Pattern matching
 │   ├── grep.py     # Regex search
 │   ├── bash.py     # Shell execution
-│   └── explore.py  # Sub-agent spawning
+│   └── task.py     # Sub-agent delegation
 ├── cli/            # CLI interface
 │   ├── main.py     # REPL loop
 │   ├── io.py       # Terminal I/O
