@@ -46,7 +46,8 @@ def call_api(
     )
     try:
         with urllib.request.urlopen(request) as response:
-            return json.loads(response.read())
+            payload: dict[str, Any] = json.loads(response.read())
+            return payload
     except urllib.error.HTTPError as err:
         body_text = err.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"HTTP {err.code}: {body_text}") from None

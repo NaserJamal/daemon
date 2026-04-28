@@ -22,11 +22,11 @@ def _find_match(text: str, old: str) -> tuple[str | None, int]:
     if not old_lines or len(old_lines) > len(file_lines):
         return None, 0
 
-    target = [l.strip() for l in old_lines]
+    target = [line.strip() for line in old_lines]
     matches: list[str] = []
     for i in range(len(file_lines) - len(old_lines) + 1):
         window = file_lines[i : i + len(old_lines)]
-        if [l.strip() for l in window] == target:
+        if [line.strip() for line in window] == target:
             candidate = "\n".join(window)
             if candidate in text:
                 matches.append(candidate)

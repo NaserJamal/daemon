@@ -25,21 +25,21 @@ else
 fi
 
 heading "format (ruff format --check)"
-if (cd "$PKG" && ruff format --check .); then
+if (cd "$PKG" && python -m ruff format --check .); then
     format_status="ok"
 else
-    format_status="FAILED — run 'ruff format daemon/' to fix"
+    format_status="FAILED — run 'python -m ruff format daemon/' to fix"
     fail=1
 fi
 
 heading "lint (ruff check)"
-lint_output=$(cd "$PKG" && ruff check . 2>&1) || true
+lint_output=$(cd "$PKG" && python -m ruff check . 2>&1) || true
 echo "$lint_output"
 lint_count=$(echo "$lint_output" | grep -Eo 'Found [0-9]+ error' | grep -Eo '[0-9]+' | head -1)
 lint_count=${lint_count:-0}
 
 heading "typecheck (mypy)"
-type_output=$(cd "$PKG" && mypy . 2>&1) || true
+type_output=$(cd "$PKG" && python -m mypy . 2>&1) || true
 echo "$type_output"
 type_count=$(echo "$type_output" | grep -Eo 'Found [0-9]+ error' | grep -Eo '[0-9]+' | head -1)
 type_count=${type_count:-0}
