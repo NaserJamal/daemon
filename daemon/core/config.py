@@ -1,30 +1,20 @@
-"""Configuration loaded from environment variables (with .env support)."""
+"""Runtime configuration loaded from the user config file.
+
+All settings (including the YOLO safety flag) live in the per-user config
+file managed by `daemon configure` (see `daemon.core.user_config` for the
+platform-specific location). This is the only source of truth — there is
+no env-var or `.env` fallback.
+"""
 
 from __future__ import annotations
 
-import os
-
 from pydantic import BaseModel, ConfigDict, Field
 
-
-def load_dotenv(path: str = ".env") -> None:
-    """Load KEY=VALUE lines from a .env file into os.environ (does not overwrite)."""
-    if not os.path.isfile(path):
-        return
-    with open(path, encoding="utf-8") as f:
-        for raw in f:
-            line = raw.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key, value = key.strip(), value.strip()
-            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
-                value = value[1:-1]
-            os.environ.setdefault(key, value)
+from daemon.core import user_config
 
 
 class Settings(BaseModel):
-    """Runtime configuration. Defaults can be overridden via env vars or kwargs."""
+    """Runtime configuration. Defaults can be overridden via the user config file."""
 
     model_config = ConfigDict(protected_namespaces=())
 
@@ -39,14 +29,13 @@ class Settings(BaseModel):
 
     @classmethod
     def from_env(cls) -> Settings:
-        """Build Settings from environment variables (loading .env first)."""
-        load_dotenv()
-        env = os.environ
+        """Build Settings from the user config file."""
+        cfg = user_config.load()
         return cls(
-            base_url=env.get("BASE_URL", cls.model_fields["base_url"].default).rstrip("/"),
-            api_key=env.get("API_KEY", ""),
-            model_name=env.get("MODEL_NAME", cls.model_fields["model_name"].default),
-            yolo=env.get("daemon_YOLO", "").lower() in ("1", "true", "yes"),
+            base_url=cfg.get("BASE_URL", cls.model_fields["base_url"].default).rstrip("/"),
+            api_key=cfg.get("API_KEY", ""),
+            model_name=cfg.get("MODEL_NAME", cls.model_fields["model_name"].default),
+            yolo=cfg.get("YOLO", "").lower() in user_config.TRUTHY,
         )
 
 
@@ -54,7 +43,7 @@ _settings: Settings | None = None
 
 
 def get_settings() -> Settings:
-    """Return a cached Settings instance, building from env on first call."""
+    """Return a cached Settings instance, building from the config file on first call."""
     global _settings
     if _settings is None:
         _settings = Settings.from_env()
@@ -62,6 +51,6 @@ def get_settings() -> Settings:
 
 
 def reset_settings() -> None:
-    """Reset the cached Settings (for tests)."""
+    """Reset the cached Settings (for tests and post-reconfigure)."""
     global _settings
     _settings = None

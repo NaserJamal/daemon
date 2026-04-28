@@ -12,47 +12,66 @@ Minimal agentic coding harness for any OpenAI-compatible API. Single Python file
 
 ## Usage
 
-Set three environment variables and run:
+Run `daemon` and you'll be prompted to set up your credentials on first launch:
 
 ```bash
-export BASE_URL="https://api.openai.com/v1"
-export API_KEY="your-key"
-export MODEL_NAME="gpt-4o-mini"
-python daemon.py
+daemon
 ```
 
-### Optional Environment Variables
+Credentials are stored in a per-user config file (locked to mode `0600` on
+Unix), so once configured you can run `daemon` from anywhere on the machine.
 
-| Variable | Description |
-|----------|-------------|
-| `daemon_YOLO` | Set to `1`, `true`, or `yes` to skip confirmation prompts for dangerous bash commands (e.g., `rm`, `sudo`, git force-push) |
+| OS      | Config location                                              |
+|---------|--------------------------------------------------------------|
+| Linux   | `$XDG_CONFIG_HOME/daemon/config` (default `~/.config/daemon/config`) |
+| macOS   | `~/Library/Application Support/daemon/config`                |
+| Windows | `%APPDATA%\daemon\config` (typically `…\AppData\Roaming\daemon\config`) |
 
-### Examples
+### Reconfiguring
+
+| Command                  | What it does                                      |
+|--------------------------|---------------------------------------------------|
+| `daemon configure`       | Interactive prompt to update all values           |
+| `daemon config show`     | Print current values (API key masked)             |
+| `daemon config path`     | Print the config file path                        |
+| `daemon config edit`     | Open the file in `$EDITOR` (or notepad/nano)      |
+| `daemon yolo`            | Toggle YOLO mode (also accepts `on`/`off`)        |
+| `/config` (in REPL)      | Re-run the interactive setup without leaving      |
+
+### YOLO mode
+
+When YOLO is on, daemon skips the confirmation prompts before running
+dangerous bash commands (e.g. `rm`, `sudo`, force-push). It is persisted in
+the config file. Toggle it with `daemon yolo`, or set it explicitly:
+
+```bash
+daemon yolo on
+daemon yolo off
+```
+
+### Provider Examples
+
+When you run `daemon configure`, supply values such as:
 
 **OpenAI**
-```bash
-export BASE_URL="https://api.openai.com/v1"
-export API_KEY="sk-..."
-export MODEL_NAME="gpt-4o-mini"
-```
+- `BASE_URL`: `https://api.openai.com/v1`
+- `API_KEY`: `sk-...`
+- `MODEL_NAME`: `gpt-4o-mini`
 
 **OpenRouter**
-```bash
-export BASE_URL="https://openrouter.ai/api/v1"
-export API_KEY="sk-or-..."
-export MODEL_NAME="anthropic/claude-opus-4.5"
-```
+- `BASE_URL`: `https://openrouter.ai/api/v1`
+- `API_KEY`: `sk-or-...`
+- `MODEL_NAME`: `anthropic/claude-opus-4.5`
 
 **Local (Ollama / vLLM / LM Studio)**
-```bash
-export BASE_URL="http://localhost:11434/v1"
-export API_KEY="ollama"
-export MODEL_NAME="qwen2.5-coder"
-```
+- `BASE_URL`: `http://localhost:11434/v1`
+- `API_KEY`: `ollama`
+- `MODEL_NAME`: `qwen2.5-coder`
 
 ## Commands
 
 - `/c` - Clear conversation
+- `/config` - Reconfigure credentials
 - `/q` or `exit` - Quit
 
 ## Tools

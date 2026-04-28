@@ -1,7 +1,7 @@
 """daemon - minimal agentic coding harness for any OpenAI-compatible endpoint."""
 
 from daemon.core.api import call_api
-from daemon.core.config import Settings, get_settings, load_dotenv
+from daemon.core.config import Settings, get_settings
 from daemon.tools import (
     BaseTool,
     get_schema,
@@ -22,7 +22,6 @@ __all__ = [
     "get_settings",
     "get_tool",
     "list_tools",
-    "load_dotenv",
     "register_tool",
     "run_tool",
 ]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from daemon.cli.configure import run_configure
 from daemon.cli.io import GREEN, RESET
 from daemon.core.prompt import get_default_system_prompt
 
@@ -22,5 +23,8 @@ def handle(user_input: str, messages: list[dict[str, Any]]) -> bool | None:
     if user_input in ("/c", "/clear"):
         messages[:] = [{"role": "system", "content": get_default_system_prompt()}]
         print(f"{GREEN}⏺ Cleared conversation{RESET}")
+        return True
+    if user_input in ("/config", "/configure"):
+        run_configure()
         return True
     return None

@@ -5,11 +5,12 @@ Run with: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest daemon/tests/
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 # Force YOLO so the bash tool never blocks on confirmation prompts in tests.
-os.environ["daemon_YOLO"] = "1"
+from daemon.core import config as _config
+
+_config._settings = _config.Settings(yolo=True)
 
 from daemon.safety.danger import danger_reason
 from daemon.tools import run_tool

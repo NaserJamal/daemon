@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from typing import Any
 
 from daemon.cli import commands
+from daemon.cli.configure import handle_subcommand, run_configure
 from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
 from daemon.cli.prompt import read_input
 from daemon.core.api import call_api
@@ -87,7 +89,17 @@ def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> N
 
 
 def main() -> None:
-    """Run the REPL. Returns when the user quits or the input stream closes."""
+    """Run the REPL or dispatch a subcommand."""
+    exit_code = handle_subcommand(sys.argv[1:])
+    if exit_code is not None:
+        raise SystemExit(exit_code)
+
+    if not get_settings().api_key:
+        print(f"{DIM}No API key found. Let's set one up.{RESET}\n")
+        if run_configure() != 0:
+            raise SystemExit(1)
+        print()
+
     _print_banner()
     schema = get_schema()
     messages: list[dict[str, Any]] = [
