@@ -58,13 +58,26 @@ def _result_preview(result: str) -> str:
 def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> None:
     """Drive the model until it produces a turn with no tool calls."""
     while True:
-        response = call_api(messages, tools=schema)
+        streamed = False
+
+        def on_delta(text: str) -> None:
+            nonlocal streamed
+            if not streamed:
+                print(f"\n{CYAN}⏺{RESET} ", end="", flush=True)
+                streamed = True
+            print(text, end="", flush=True)
+
+        response = call_api(messages, tools=schema, stream=True, on_content_delta=on_delta)
         usage.add_response(response)
         message = response["choices"][0]["message"]
         content = message.get("content") or ""
         tool_calls = message.get("tool_calls") or []
 
-        if content:
+        if streamed:
+            print()
+        elif content:
+            # Server returned content but never streamed a delta (e.g. an
+            # adapter that buffers). Render once after the fact.
             print(f"\n{CYAN}⏺{RESET} {render_markdown(content)}")
 
         messages.append(_assistant_message(message))
