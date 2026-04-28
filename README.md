@@ -98,6 +98,44 @@ When you run `daemon configure`, supply values such as:
 ⏺ There's one Python file: daemon.py
 ```
 
+## Agent handoff workflow
+
+This repo is built to be improved one phase at a time. Paste the prompt
+below into a fresh agent session — it'll read the latest breadcrumb,
+pick a phase from `ROADMAP.md`, ship it, and leave a breadcrumb behind.
+
+```
+# Agent Handoff Prompt
+
+## Context
+1. Read `AGENTS.md` for conventions and the quality bar.
+2. Read the latest breadcrumb in `sessions/` for current state.
+3. Skim `ROADMAP.md` for the phase queue.
+
+## Task
+- Pick **one** phase from `ROADMAP.md` (Now section) and complete it. Do
+  not attempt multiple phases.
+- Build incrementally. Keep code clean, concise, robust, modular, and
+  maintainable.
+- Run `./scripts/check.sh` before finishing. Tests and format must be
+  green; lint and typecheck must not regress versus the latest breadcrumb.
+
+## Handoff
+When done, copy `sessions/TEMPLATE.md` to
+`sessions/YYYY-MM-DD-HHMM-<slug>.md` (UTC) and fill it in. Move the phase
+you finished to the `Done` section of `ROADMAP.md`.
+```
+
+Supporting files:
+
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | Conventions, quality bar, code-style rules. Read first. |
+| `ROADMAP.md` | Phase queue (`Now` / `Later` / `Done`). |
+| `sessions/` | Append-only breadcrumb log; one file per session. |
+| `sessions/TEMPLATE.md` | Breadcrumb format. |
+| `scripts/check.sh` | Quality gate: tests + format + lint + typecheck. |
+
 ## License
 
 MIT
