@@ -20,10 +20,9 @@ _(Empty — pick one from **Later** below, or open a new phase.)_
 
 ## Later
 
-- **/undo and edit checkpointing.** Snapshot files before any `write`/`edit`
-  tool call so `/undo` can restore the last-modified file.
 - **Diff display.** Show a unified diff for `write` and `edit` results
-  instead of the current "ok".
+  instead of the current "ok". The pre-image stored by `/undo`
+  checkpoints is exactly what `difflib.unified_diff` wants.
 - **Tests for `cli/`, `core/`, and `safety/`.** Today only `tools/` has
   coverage. Aim for the easy wins: command handler, danger detector edges,
   config round-trip.
@@ -55,3 +54,4 @@ them. Format: `- P1 — Lint & type cleanup — sessions/2026-04-29-1400-lint.md
 - P4 — Cost & token tracking — sessions/2026-04-28-1605-usage-tracking.md
 - P5 — Conversation persistence — sessions/2026-04-28-1620-conversation-persistence.md
 - P2 — Streaming responses — sessions/2026-04-28-2110-streaming-responses.md
+- P6 — /undo and edit checkpointing — sessions/2026-04-28-2200-undo-checkpointing.md
