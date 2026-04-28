@@ -37,6 +37,11 @@ def _build_keybindings() -> KeyBindings:
     def _newline_alt(event: KeyPressEvent) -> None:
         event.current_buffer.insert_text("\n")
 
+    # Double-Escape clears the current input buffer.
+    @kb.add("escape", "escape")
+    def _clear_input(event: KeyPressEvent) -> None:
+        event.current_buffer.text = ""
+
     return kb
 
 
