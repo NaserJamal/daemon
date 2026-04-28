@@ -23,12 +23,6 @@ for tests.
   message is complete (tool calls can't be partially applied).
 - Preserve existing reasoning-field passthrough.
 
-### P3 — `/help` and slash-command discoverability
-`/help` should list every registered slash command with its one-line
-description. Make `commands.py` registry-based (decorator) instead of the
-current chained `if`s — see `CONTRIBUTING.md` for the intended shape.
-Add tests covering `/help`, `/clear`, and an unknown command.
-
 ### P4 — Cost & token tracking
 Show running input/output token counts and (when available) cost after each
 turn. Pull `usage` from the API response. Display in the banner footer or
@@ -75,3 +69,4 @@ them. Format: `- P1 — Lint & type cleanup — sessions/2026-04-29-1400-lint.md
 
 - P0 — Agent-handoff scaffolding — sessions/2026-04-28-1518-genesis.md
 - P1 — Lint & type cleanup — sessions/2026-04-28-1531-lint-and-types.md
+- P3 — `/help` and slash-command discoverability — sessions/2026-04-28-1547-slash-command-registry.md
