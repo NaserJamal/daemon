@@ -57,8 +57,10 @@ class TaskTool(BaseTool):
                     tool_args = json.loads(call["function"].get("arguments") or "{}")
                 except json.JSONDecodeError:
                     tool_args = {}
-                sub.append({
-                    "role": "tool",
-                    "tool_call_id": call.get("id", ""),
-                    "content": run_tool(call["function"]["name"], tool_args),
-                })
+                sub.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call.get("id", ""),
+                        "content": run_tool(call["function"]["name"], tool_args),
+                    }
+                )

@@ -81,11 +81,13 @@ def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> N
             result = run_tool(name, args)
             print(f"  {DIM}⎿  {_result_preview(result)}{RESET}")
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": call.get("id", ""),
-                "content": result,
-            })
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call.get("id", ""),
+                    "content": result,
+                }
+            )
 
 
 def main() -> None:
@@ -102,9 +104,7 @@ def main() -> None:
 
     _print_banner()
     schema = get_schema()
-    messages: list[dict[str, Any]] = [
-        {"role": "system", "content": get_default_system_prompt()}
-    ]
+    messages: list[dict[str, Any]] = [{"role": "system", "content": get_default_system_prompt()}]
 
     while True:
         try:

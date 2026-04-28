@@ -44,18 +44,20 @@ def get_schema() -> list[dict[str, Any]]:
             properties[param_name] = {"type": param_type.rstrip("?")}
             if not optional:
                 required.append(param_name)
-        schema.append({
-            "type": "function",
-            "function": {
-                "name": name,
-                "description": tool.description,
-                "parameters": {
-                    "type": "object",
-                    "properties": properties,
-                    "required": required,
+        schema.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": tool.description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": properties,
+                        "required": required,
+                    },
                 },
-            },
-        })
+            }
+        )
     return schema
 
 
