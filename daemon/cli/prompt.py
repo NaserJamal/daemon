@@ -9,6 +9,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 from daemon.cli.io import BLUE, BOLD, RESET
 
@@ -19,7 +20,7 @@ def _build_keybindings() -> KeyBindings:
     kb = KeyBindings()
 
     @kb.add("enter")
-    def _submit(event) -> None:
+    def _submit(event: KeyPressEvent) -> None:
         buf = event.current_buffer
         text = buf.text
         # Backslash-continuation: trailing `\` becomes a newline (works in any terminal).
@@ -33,7 +34,7 @@ def _build_keybindings() -> KeyBindings:
     # to send this same sequence when Shift+Enter is pressed, giving the user
     # a "Shift+Enter for newline" experience identical to Claude Code.
     @kb.add("escape", "enter")
-    def _newline_alt(event) -> None:
+    def _newline_alt(event: KeyPressEvent) -> None:
         event.current_buffer.insert_text("\n")
 
     return kb

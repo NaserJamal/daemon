@@ -14,16 +14,6 @@ the way goes in **Later**.
 
 ## Now (pick one)
 
-### P1 — Lint & type cleanup
-The baseline has 5 ruff errors and ~12 mypy errors. Drive both to zero
-without loosening config.
-- Fix ambiguous `l` loop variable and unused-noqa-style issues in
-  `daemon/tools/edit.py` and friends.
-- Add `prompt_toolkit` and `pydantic` to mypy's ignored-missing-imports list
-  *only* if upstream stubs aren't available; otherwise install the stubs.
-- Run `ruff format` once across the package and commit the formatting
-  separately from logic changes.
-
 ### P2 — Streaming responses
 `core/api.py` reads the whole response before printing. Stream tokens to the
 terminal so the user sees progress. Keep the non-streaming path available
@@ -84,3 +74,4 @@ _(Move completed phases here with a link to the breadcrumb that finished
 them. Format: `- P1 — Lint & type cleanup — sessions/2026-04-29-1400-lint.md`)_
 
 - P0 — Agent-handoff scaffolding — sessions/2026-04-28-1518-genesis.md
+- P1 — Lint & type cleanup — sessions/2026-04-28-1531-lint-and-types.md

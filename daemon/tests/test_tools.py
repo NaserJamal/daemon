@@ -7,11 +7,6 @@ from __future__ import annotations
 
 from typing import Any
 
-# Force YOLO so the bash tool never blocks on confirmation prompts in tests.
-from daemon.core import config as _config
-
-_config._settings = _config.Settings(yolo=True)
-
 from daemon.safety.danger import danger_reason
 from daemon.tools import run_tool
 
