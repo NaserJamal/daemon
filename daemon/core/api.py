@@ -29,6 +29,7 @@ def call_api(
         settings = get_settings()
     if tools is None:
         from daemon.tools import get_schema  # local import: avoid cycle
+
         tools = get_schema()
 
     body: dict[str, Any] = {"model": settings.model_name, "messages": messages}

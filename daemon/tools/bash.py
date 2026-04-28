@@ -37,8 +37,11 @@ class BashTool(BaseTool):
 
         timeout = max(0, args.get("timeout", settings.bash_timeout))
         proc = subprocess.Popen(
-            cmd, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
         )
         timer = threading.Timer(timeout, proc.kill) if timeout else None
         if timer:

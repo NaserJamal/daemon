@@ -55,12 +55,14 @@ def run_configure() -> int:
         print(f"\n{RED}API_KEY is required.{RESET}")
         return 1
 
-    path = user_config.save({
-        "BASE_URL": base_url.rstrip("/"),
-        "API_KEY": api_key,
-        "MODEL_NAME": model_name,
-        "YOLO": "true" if yolo else "false",
-    })
+    path = user_config.save(
+        {
+            "BASE_URL": base_url.rstrip("/"),
+            "API_KEY": api_key,
+            "MODEL_NAME": model_name,
+            "YOLO": "true" if yolo else "false",
+        }
+    )
     reset_settings()
     print(f"\n{GREEN}✓ Saved to {path}{RESET}")
     return 0
@@ -120,8 +122,10 @@ def _edit() -> int:
         user_config.save({})
     editor = os.environ.get("VISUAL") or os.environ.get("EDITOR")
     if not editor:
-        editor = "notepad" if sys.platform == "win32" else (
-            shutil.which("nano") or shutil.which("vi") or "vi"
+        editor = (
+            "notepad"
+            if sys.platform == "win32"
+            else (shutil.which("nano") or shutil.which("vi") or "vi")
         )
     try:
         subprocess.call([editor, str(path)])
