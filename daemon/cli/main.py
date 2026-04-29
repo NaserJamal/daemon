@@ -11,7 +11,7 @@ from daemon.cli import commands
 from daemon.cli.configure import handle_subcommand, run_configure
 from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
 from daemon.cli.prompt import read_input
-from daemon.core import sessions, usage
+from daemon.core import checkpoints, sessions, usage
 from daemon.core.api import call_api
 from daemon.core.config import get_settings
 from daemon.core.prompt import get_default_system_prompt
@@ -43,6 +43,25 @@ def _assistant_message(message: dict[str, Any]) -> dict[str, Any]:
     if message.get("tool_calls"):
         out["tool_calls"] = message["tool_calls"]
     return out
+
+
+def _maybe_snapshot(name: str, args: dict[str, Any]) -> tuple[str, bytes | None] | None:
+    """Capture a pre-image if the tool will mutate a file. Returns ``(path, bytes)``.
+
+    Bytes are None when the file doesn't exist yet — undo will then
+    delete it. Missing or non-string ``path`` arguments skip the
+    checkpoint silently; the tool will report its own error.
+    """
+    if name not in ("write", "edit"):
+        return None
+    path = args.get("path")
+    if not isinstance(path, str):
+        return None
+    try:
+        content, _ = checkpoints.snapshot(path)
+    except OSError:
+        return None
+    return path, content
 
 
 def _result_preview(result: str) -> str:
@@ -95,7 +114,10 @@ def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> N
             arg_preview = str(next(iter(args.values()), ""))[:ARG_PREVIEW_LEN]
             print(f"\n{GREEN}⏺ {name.capitalize()}{RESET}({DIM}{arg_preview}{RESET})")
 
+            pre_image = _maybe_snapshot(name, args)
             result = run_tool(name, args)
+            if pre_image is not None and not result.startswith("error"):
+                checkpoints.push(pre_image[0], name, pre_image[1])
             print(f"  {DIM}⎿  {_result_preview(result)}{RESET}")
 
             messages.append(

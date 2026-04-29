@@ -8,7 +8,7 @@ from typing import Any
 
 from daemon.cli.configure import run_configure
 from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET
-from daemon.core import sessions, usage
+from daemon.core import checkpoints, sessions, usage
 from daemon.core.prompt import get_default_system_prompt
 from daemon.core.sessions import Session
 
@@ -100,8 +100,25 @@ def _cmd_help(_args: list[str], _messages: list[dict[str, Any]]) -> bool | None:
 def _cmd_clear(_args: list[str], messages: list[dict[str, Any]]) -> bool | None:
     messages[:] = [{"role": "system", "content": get_default_system_prompt()}]
     usage.reset()
+    checkpoints.clear()
     set_session(Session.new())
     print(f"{GREEN}⏺ Started a new conversation{RESET}")
+    return True
+
+
+@register_command("/undo", "Restore the last file modified by write or edit")
+def _cmd_undo(_args: list[str], _messages: list[dict[str, Any]]) -> bool | None:
+    cp = checkpoints.undo()
+    if cp is None:
+        print(f"{DIM}Nothing to undo.{RESET}")
+        return True
+    if cp.content is None:
+        action = f"deleted (file did not exist before {cp.tool})"
+    else:
+        action = f"restored (pre-{cp.tool})"
+    remaining = checkpoints.count()
+    suffix = f" {DIM}({remaining} more){RESET}" if remaining else ""
+    print(f"{GREEN}⏺ {action}: {cp.path}{RESET}{suffix}")
     return True
 
 
