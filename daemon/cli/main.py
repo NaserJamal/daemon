@@ -14,6 +14,7 @@ from daemon.cli.prompt import read_input
 from daemon.core import checkpoints, sessions, usage
 from daemon.core.api import call_api
 from daemon.core.config import get_settings
+from daemon.core.diff import format_diff
 from daemon.core.prompt import get_default_system_prompt
 from daemon.core.sessions import Session, SessionMeta
 from daemon.tools import get_schema, run_tool
@@ -62,6 +63,20 @@ def _maybe_snapshot(name: str, args: dict[str, Any]) -> tuple[str, bytes | None]
     except OSError:
         return None
     return path, content
+
+
+def _diff_result(path: str, pre: bytes | None, fallback: str) -> str:
+    """Replace a successful write/edit ``"ok"`` with a unified diff.
+
+    Falls back to the original tool result if the post-image can't be
+    read (e.g. the tool moved or unlinked the file).
+    """
+    try:
+        with open(path, "rb") as f:
+            post = f.read()
+    except OSError:
+        return fallback
+    return format_diff(path, pre, post)
 
 
 def _result_preview(result: str) -> str:
@@ -118,6 +133,7 @@ def _run_turn(messages: list[dict[str, Any]], schema: list[dict[str, Any]]) -> N
             result = run_tool(name, args)
             if pre_image is not None and not result.startswith("error"):
                 checkpoints.push(pre_image[0], name, pre_image[1])
+                result = _diff_result(pre_image[0], pre_image[1], result)
             print(f"  {DIM}⎿  {_result_preview(result)}{RESET}")
 
             messages.append(
