@@ -8,6 +8,7 @@ import urllib.request
 from collections.abc import Callable, Iterable
 from typing import Any
 
+from daemon.core import debug
 from daemon.core.config import Settings, get_settings
 
 
@@ -48,22 +49,28 @@ def call_api(
         # Without this OpenAI omits the final usage chunk in stream mode.
         body["stream_options"] = {"include_usage": True}
 
+    url = f"{settings.base_url}/chat/completions"
     request = urllib.request.Request(
-        f"{settings.base_url}/chat/completions",
+        url,
         data=json.dumps(body).encode(),
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {settings.api_key}",
         },
     )
+    debug.log_event("request", {"url": url, "body": body})
     try:
         with urllib.request.urlopen(request) as response:
+            payload: dict[str, Any]
             if stream:
-                return _accumulate_stream(response, on_content_delta)
-            payload: dict[str, Any] = json.loads(response.read())
+                payload = _accumulate_stream(response, on_content_delta)
+            else:
+                payload = json.loads(response.read())
+            debug.log_event("response", payload)
             return payload
     except urllib.error.HTTPError as err:
         body_text = err.read().decode("utf-8", errors="replace")
+        debug.log_event("http_error", {"code": err.code, "body": body_text})
         raise RuntimeError(f"HTTP {err.code}: {body_text}") from None
 
 

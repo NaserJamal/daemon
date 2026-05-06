@@ -11,7 +11,7 @@ from daemon.cli import commands
 from daemon.cli.configure import handle_subcommand, run_configure
 from daemon.cli.io import BOLD, CYAN, DIM, GREEN, RED, RESET, render_markdown, separator
 from daemon.cli.prompt import read_input
-from daemon.core import checkpoints, sessions, usage
+from daemon.core import checkpoints, debug, sessions, usage
 from daemon.core.api import call_api
 from daemon.core.config import get_settings
 from daemon.core.diff import format_diff
@@ -26,11 +26,47 @@ ARG_PREVIEW_LEN = 50
 def _print_banner() -> None:
     settings = get_settings()
     yolo_tag = f" | {RED}YOLO{RESET}" if settings.yolo else ""
+    debug_tag = ""
+    if debug.is_enabled():
+        debug_tag = f" | {DIM}debug → {debug.current_path()}{RESET}"
     print(
         f"{BOLD}daemon{RESET} | "
         f"{DIM}{settings.model_name} | {settings.base_url} | {os.getcwd()}{RESET}"
-        f"{yolo_tag}\n"
+        f"{yolo_tag}{debug_tag}\n"
     )
+
+
+def _consume_debug_flag(argv: list[str]) -> list[str]:
+    """Strip ``--debug`` / ``--debug=<path>`` from argv, enabling logging.
+
+    Falls back to ``DAEMON_DEBUG`` if no flag is present so users can opt in
+    from a shell rc without having to remember the flag.
+    """
+    remaining: list[str] = []
+    enabled = False
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--debug":
+            nxt = argv[i + 1] if i + 1 < len(argv) else ""
+            if nxt and not nxt.startswith("-"):
+                debug.enable(nxt)
+                i += 2
+            else:
+                debug.enable()
+                i += 1
+            enabled = True
+            continue
+        if a.startswith("--debug="):
+            debug.enable(a.split("=", 1)[1] or None)
+            enabled = True
+            i += 1
+            continue
+        remaining.append(a)
+        i += 1
+    if not enabled:
+        debug.from_env()
+    return remaining
 
 
 def _assistant_message(message: dict[str, Any]) -> dict[str, Any]:
@@ -203,7 +239,7 @@ def _start_session(argv: list[str]) -> tuple[Session, list[dict[str, Any]]]:
 
 def main() -> None:
     """Run the REPL or dispatch a subcommand."""
-    argv = sys.argv[1:]
+    argv = _consume_debug_flag(sys.argv[1:])
     # The session flags are REPL-level, not subcommands; strip them before
     # `handle_subcommand` so they don't trigger an "unknown subcommand" error.
     repl_argv = [a for a in argv if a not in ("--resume", "-r", "--continue", "-c")]

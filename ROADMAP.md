@@ -23,8 +23,6 @@ _(Empty — pick one from **Later** below, or open a new phase.)_
 - **Tests for `cli/`, `core/`, and `safety/`.** Today only `tools/` has
   coverage. Aim for the easy wins: command handler, danger detector edges,
   config round-trip.
-- **Logging / debug mode.** A `--debug` flag (or env var) that prints API
-  requests/responses to a file.
 - **Web fetch tool.** `fetch <url>` returns text, with a size cap and a
   hostname allowlist or confirmation prompt.
 - **MCP client support.** Connect to MCP servers and expose their tools
@@ -53,3 +51,4 @@ them. Format: `- P1 — Lint & type cleanup — sessions/2026-04-29-1400-lint.md
 - P2 — Streaming responses — sessions/2026-04-28-2110-streaming-responses.md
 - P6 — /undo and edit checkpointing — sessions/2026-04-28-2200-undo-checkpointing.md
 - P7 — Diff display for write/edit — sessions/2026-04-30-1817-diff-display.md
+- P8 — Debug-mode API logging — sessions/2026-05-06-1200-debug-mode.md
