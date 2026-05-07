@@ -5,7 +5,7 @@ which calls ``@register_tool`` at module load to populate the registry.
 """
 
 # Side-effect imports: each module registers its tool on import.
-from daemon.tools import bash, edit, glob, grep, read, task, write  # noqa: F401
+from daemon.tools import bash, edit, fetch, glob, grep, read, task, write  # noqa: F401
 from daemon.tools.base import BaseTool
 from daemon.tools.registry import (
     get_schema,
