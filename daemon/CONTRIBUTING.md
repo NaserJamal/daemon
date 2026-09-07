@@ -50,9 +50,11 @@ daemon/
 │   ├── main.py     # REPL loop
 │   ├── io.py       # Terminal I/O utilities
 │   └── commands.py # Slash commands
-└── safety/         # Safety features
-    ├── danger.py   # Danger pattern detection
-    └── confirm.py  # User confirmation prompts
+├── safety/         # Safety features
+│   ├── danger.py   # Danger pattern detection
+│   └── confirm.py  # User confirmation prompts
+└── utils/          # Cross-cutting helpers
+    └── spill.py    # Oversized tool output -> temp file
 ```
 
 ## Adding a New Tool

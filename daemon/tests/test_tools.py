@@ -105,6 +105,16 @@ class TestGrepTool:
         assert run_tool("grep", {"pattern": "def", "path": str(tmp_path)}) == "none"
 
 
+class TestBashTool:
+    def test_output_returned_inline(self) -> None:
+        assert run_tool("bash", {"cmd": "echo hi"}) == "hi"
+
+    def test_large_output_spills_to_a_file(self) -> None:
+        result = run_tool("bash", {"cmd": "seq 1 5000"})
+        assert "bash: 5000 lines" in result
+        assert "full output: " in result
+
+
 class TestDangerDetection:
     def test_rm_detection(self) -> None:
         assert danger_reason("rm file.txt") == "rm"

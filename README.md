@@ -8,7 +8,7 @@ Minimal agentic coding harness for any OpenAI-compatible API. Pure Python, two d
 - Tools: `read`, `write`, `edit`, `glob`, `grep`, `bash`, `fetch`, `task`
 - Unified diffs on every file change, `/undo` to revert
 - Per-project session history, `/rewind` to any earlier prompt
-- Confirmation gate before dangerous commands and network access
+- Confirmation gate before dangerous commands
 - Works with OpenAI, OpenRouter, Groq, Together, Ollama, vLLM, ...
 
 ## Usage
@@ -51,9 +51,8 @@ Session transcripts live beside it under `projects/<cwd>/<id>.jsonl`.
 ### YOLO mode
 
 When YOLO is on, daemon skips the confirmation prompts before running
-dangerous bash commands (e.g. `rm`, `sudo`, force-push) and before fetching
-URLs. It is persisted in the config file. Toggle it with `daemon yolo`, or
-set it explicitly:
+dangerous bash commands (e.g. `rm`, `sudo`, force-push). It is persisted in
+the config file. Toggle it with `daemon yolo`, or set it explicitly:
 
 ```bash
 daemon yolo on
@@ -92,8 +91,8 @@ When you run `daemon configure`, supply values such as:
 | `edit` | Replace string in file (unique, or `all=true`) |
 | `glob` | Find files by pattern, sorted by mtime |
 | `grep` | Search files for regex |
-| `bash` | Run shell command |
-| `fetch` | HTTP GET a URL, HTML reduced to text |
+| `bash` | Run shell command; large output spills to a temp file |
+| `fetch` | HTTP GET a URL, HTML reduced to text; large bodies spill to a temp file |
 | `task` | Delegate to a sub-agent; only its summary comes back |
 
 ## Example
