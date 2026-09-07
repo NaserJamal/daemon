@@ -49,6 +49,7 @@ packages = [
     "daemon.core",
     "daemon.safety",
     "daemon.tools",
+    "daemon.utils",
 ]
 
 [tool.setuptools.package-dir]
@@ -57,6 +58,7 @@ packages = [
 "daemon.core" = "core"
 "daemon.safety" = "safety"
 "daemon.tools" = "tools"
+"daemon.utils" = "utils"
 
 [tool.setuptools.package-data]
 daemon = ["pyproject.toml"]

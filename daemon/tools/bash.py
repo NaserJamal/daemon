@@ -11,6 +11,7 @@ from daemon.safety.confirm import confirm
 from daemon.safety.danger import danger_reason
 from daemon.tools.base import BaseTool
 from daemon.tools.registry import register_tool
+from daemon.utils.spill import spill
 
 DIM = "\033[2m"
 RESET = "\033[0m"
@@ -21,6 +22,7 @@ class BashTool(BaseTool):
     name = "bash"
     description = (
         "Run a shell command in the harness cwd. stderr is merged into stdout. "
+        "Large output is written to a temp file and only a preview comes back. "
         "Killed after `timeout` seconds (default 120, pass 0 to disable for "
         "long-running commands)."
     )
@@ -58,7 +60,7 @@ class BashTool(BaseTool):
                 timer.cancel()
             proc.wait()
 
-        out = "".join(lines).strip() or "(empty)"
+        out = spill("".join(lines).strip() or "(empty)", "bash")
         if proc.returncode < 0:
             out += f"\n(killed by signal {-proc.returncode}; may be {timeout}s timeout)"
         return out

@@ -1,14 +1,15 @@
 # daemon
 
-Minimal agentic coding harness for any OpenAI-compatible API. Single Python file, zero dependencies, ~250 lines.
+Minimal agentic coding harness for any OpenAI-compatible API. Pure Python, two dependencies.
 
 ## Features
 
-- Full agentic loop with tool use
-- Tools: `read`, `write`, `edit`, `glob`, `grep`, `bash`
-- Conversation history
-- Colored terminal output
-- Works with any OpenAI-compatible endpoint (OpenAI, OpenRouter, Groq, Together, Ollama, vLLM, ...)
+- Streaming agentic loop with tool use and sub-agents
+- Tools: `read`, `write`, `edit`, `glob`, `grep`, `bash`, `fetch`, `task`
+- Unified diffs on every file change, `/undo` to revert
+- Per-project session history, `/rewind` to any earlier prompt
+- Confirmation gate before dangerous commands
+- Works with OpenAI, OpenRouter, Groq, Together, Ollama, vLLM, ...
 
 ## Usage
 
@@ -18,8 +19,17 @@ Run `daemon` and you'll be prompted to set up your credentials on first launch:
 daemon
 ```
 
+| Flag | What it does |
+|------|--------------|
+| `--continue`, `-c` | Resume the most recent session for this directory |
+| `--resume`, `-r` | Pick from recent sessions for this directory |
+| `--debug[=PATH]` | Tee API traffic to a JSONL log (default `./daemon-debug.log`) |
+
+## Configuration
+
 Credentials are stored in a per-user config file (locked to mode `0600` on
 Unix), so once configured you can run `daemon` from anywhere on the machine.
+Session transcripts live beside it under `projects/<cwd>/<id>.jsonl`.
 
 | OS      | Config location                                              |
 |---------|--------------------------------------------------------------|
@@ -53,26 +63,24 @@ daemon yolo off
 
 When you run `daemon configure`, supply values such as:
 
-**OpenAI**
-- `BASE_URL`: `https://api.openai.com/v1`
-- `API_KEY`: `sk-...`
-- `MODEL_NAME`: `gpt-4o-mini`
-
-**OpenRouter**
-- `BASE_URL`: `https://openrouter.ai/api/v1`
-- `API_KEY`: `sk-or-...`
-- `MODEL_NAME`: `anthropic/claude-opus-4.5`
-
-**Local (Ollama / vLLM / LM Studio)**
-- `BASE_URL`: `http://localhost:11434/v1`
-- `API_KEY`: `ollama`
-- `MODEL_NAME`: `qwen2.5-coder`
+| Provider | `BASE_URL` | `MODEL_NAME` |
+|----------|------------|--------------|
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| OpenRouter | `https://openrouter.ai/api/v1` | `anthropic/claude-opus-4.5` |
+| Local (Ollama / vLLM / LM Studio) | `http://localhost:11434/v1` | `qwen2.5-coder` |
 
 ## Commands
 
-- `/c` - Clear conversation
-- `/config` - Reconfigure credentials
-- `/q` or `exit` - Quit
+| Command | Aliases | Description |
+|---------|---------|-------------|
+| `/help` | `/h` `/?` | Show this list of commands |
+| `/clear` | `/c` | Start a new conversation |
+| `/undo` | | Restore the last file modified by `write` or `edit` |
+| `/rewind` | `/r` | Roll back to a previous user message |
+| `/usage` | `/u` | Show token usage; `on`/`off` toggles per-turn display |
+| `/sessions` | | List recent sessions for this directory |
+| `/config` | `/configure` | Re-run the interactive configuration flow |
+| `/quit` | `/q` `/exit` | Quit |
 
 ## Tools
 
@@ -80,22 +88,25 @@ When you run `daemon configure`, supply values such as:
 |------|-------------|
 | `read` | Read file with line numbers, offset/limit |
 | `write` | Write content to file |
-| `edit` | Replace string in file (must be unique) |
+| `edit` | Replace string in file (unique, or `all=true`) |
 | `glob` | Find files by pattern, sorted by mtime |
 | `grep` | Search files for regex |
-| `bash` | Run shell command |
+| `bash` | Run shell command; large output spills to a temp file |
+| `fetch` | HTTP GET a URL, HTML reduced to text; large bodies spill to a temp file |
+| `task` | Delegate to a sub-agent; only its summary comes back |
 
 ## Example
 
 ```
 ────────────────────────────────────────
-❯ what files are here?
+❯ what tools are registered?
 ────────────────────────────────────────
 
-⏺ Glob(**/*.py)
-  ⎿  daemon.py
+⏺ Read(daemon/tools/__init__.py)
+  ⎿  25 lines
 
-⏺ There's one Python file: daemon.py
+⏺ Eight, each self-registering on import: read, write, edit, glob,
+  grep, bash, fetch, task.
 ```
 
 ## Agent handoff workflow

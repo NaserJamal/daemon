@@ -65,6 +65,7 @@ daemon/                 # Python package (installed as `daemon`)
 ├── core/               # api client, settings, system prompt, user config
 ├── safety/             # danger-pattern detection, confirmation prompts
 ├── tools/              # tool implementations + registry
+├── utils/              # small cross-cutting helpers (see its docstring)
 └── tests/              # pytest suite
 
 sessions/               # breadcrumbs (handoff log; one file per session)

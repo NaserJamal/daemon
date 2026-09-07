@@ -9,10 +9,9 @@ from html.parser import HTMLParser
 from typing import Any
 from urllib.parse import urlparse
 
-from daemon.core.config import get_settings
-from daemon.safety.confirm import confirm
 from daemon.tools.base import BaseTool
 from daemon.tools.registry import register_tool
+from daemon.utils.spill import spill
 
 DEFAULT_MAX_BYTES = 1_000_000
 TIMEOUT_SECONDS = 30
@@ -24,8 +23,9 @@ class FetchTool(BaseTool):
     name = "fetch"
     description = (
         "HTTP GET a URL and return the response body as text. HTML is reduced to "
-        "readable text. Truncates at max_bytes (default 1_000_000). Only http/https "
-        "URLs are accepted; the user is asked to confirm unless YOLO mode is on."
+        "readable text. A large body is written to a temp file and only a preview "
+        "comes back. Truncates at max_bytes (default 1_000_000). Only http/https "
+        "URLs are accepted."
     )
     parameters = {"url": "string", "max_bytes": "integer?"}
 
@@ -38,9 +38,6 @@ class FetchTool(BaseTool):
             return f"error: unsupported scheme {parsed.scheme!r} (only http/https)"
         if not parsed.netloc:
             return "error: invalid url"
-
-        if not get_settings().yolo and not confirm(url, f"network fetch to {parsed.netloc}"):
-            return "error: user denied execution"
 
         request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         try:
@@ -70,7 +67,7 @@ class FetchTool(BaseTool):
 
         if truncated:
             text = text.rstrip() + f"\n(truncated at {max_bytes} bytes)"
-        return text
+        return spill(text, f"fetch {parsed.netloc}")
 
 
 _CHARSET_RE = re.compile(r"charset=([^\s;]+)", re.IGNORECASE)
@@ -84,7 +81,9 @@ def _charset(content_type: str) -> str | None:
 class _TextExtractor(HTMLParser):
     """Strip tags, drop script/style, and emit a roughly readable text block."""
 
-    SKIP_TAGS = frozenset({"script", "style", "noscript", "head", "meta", "link"})
+    # Void elements are excluded: they have no end tag, so skipping on them would
+    # never unwind. They carry no text anyway.
+    SKIP_TAGS = frozenset({"script", "style", "noscript", "head", "title"})
     BREAK_TAGS = frozenset({"p", "br", "div", "li", "tr", "h1", "h2", "h3", "h4", "h5", "h6"})
 
     def __init__(self) -> None:

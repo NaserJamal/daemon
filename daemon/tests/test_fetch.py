@@ -103,18 +103,6 @@ class TestFetchTool:
             result = run_tool("fetch", {"url": "https://example.test/"})
         assert result == "hi"
 
-    def test_user_denied(self) -> None:
-        from daemon.core import config
-
-        original = config._settings
-        config._settings = config.Settings(yolo=False)
-        try:
-            with patch("daemon.safety.confirm.input", return_value="n"):
-                result = run_tool("fetch", {"url": "https://example.test/"})
-        finally:
-            config._settings = original
-        assert result == "error: user denied execution"
-
     def test_registered_in_schema(self) -> None:
         from daemon.tools import get_schema
 
@@ -131,6 +119,12 @@ class TestHtmlExtractor:
     def test_drops_style_block(self) -> None:
         out = _html_to_text("<style>body{color:red}</style><p>visible</p>")
         assert out == "visible"
+
+    def test_void_head_tags_do_not_swallow_body(self) -> None:
+        out = _html_to_text(
+            '<head><meta charset="utf-8"><link rel="icon" href="x"></head><body><p>shown</p></body>'
+        )
+        assert out == "shown"
 
     def test_handles_nested_skip_tags(self) -> None:
         out = _html_to_text("<head><title>t</title></head><body><p>shown</p></body>")
